@@ -1,0 +1,31 @@
+Package: nmaplots
+Type: Package
+Title: Publication-Quality Network Plots for 'netmeta' Objects
+Version: 0.1.0
+Authors@R: person("Vanio", "Antunes", email = "vanio.antunes.md@gmail.com", role = c("aut", "cre"))
+Description: A single-function companion to the 'netmeta' package. nmaplot()
+    takes the object returned by netmeta::netmeta() and draws the evidence
+    network with 'ggplot2': node size by sample size or number of studies,
+    edge width and labels by number of studies, several layouts (circle,
+    star, spring, custom), multi-arm study shading, colour and title control,
+    optional grid, and direct export to PNG, PDF or TIFF.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1)
+Imports:
+    ggplot2 (>= 3.5.0),
+    grDevices,
+    stats,
+    tools,
+    utils
+Suggests:
+    netmeta,
+    meta,
+    ragg,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+URL: https://github.com/vanioljantunes/nmaplots
+BugReports: https://github.com/vanioljantunes/nmaplots/issues
+Config/roxygen2/version: 8.0.0

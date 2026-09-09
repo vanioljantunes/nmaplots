@@ -1,0 +1,169 @@
+skip_if_not_installed("netmeta")
+
+suppressPackageStartupMessages(library(netmeta))
+
+make_net <- function() {
+  data(smokingcessation, package = "netmeta", envir = environment())
+  p <- pairwise(treat = list(treat1, treat2, treat3),
+                event = list(event1, event2, event3),
+                n = list(n1, n2, n3),
+                data = smokingcessation, sm = "OR")
+  suppressWarnings(netmeta(p, reference.group = "A"))
+}
+
+make_net_no_n <- function() {
+  data(Senn2013, package = "netmeta", envir = environment())
+  suppressWarnings(netmeta(TE, seTE, treat1, treat2, studlab,
+                           data = Senn2013, sm = "MD", reference.group = "plac"))
+}
+
+test_that("nmaplot returns a ggplot with node and edge data", {
+  net <- make_net()
+  p <- nmaplot(net)
+  expect_s3_class(p, "ggplot")
+  expect_named(p$nmaplot, c("nodes", "edges", "rings", "multiarm"))
+  expect_equal(nrow(p$nmaplot$nodes), length(net$trts))
+  expect_true(all(p$nmaplot$edges$studies >= 1))
+  # every direct comparison in the object is an edge
+  key <- paste(pmin(net$treat1, net$treat2), pmax(net$treat1, net$treat2))
+  expect_equal(nrow(p$nmaplot$edges), length(unique(key)))
+})
+
+test_that("labels carry sample sizes when available", {
+  net <- make_net()
+  p <- nmaplot(net)
+  expect_true(all(grepl("n = ", p$nmaplot$nodes$label)))
+  expect_equal(p$nmaplot$nodes$fill[p$nmaplot$nodes$trt == "A"], "#8A939B")
+  p2 <- nmaplot(net, show_n = FALSE)
+  expect_equal(p2$nmaplot$nodes$label, net$trts)
+  expect_true(all(grepl("\nn = ", p$nmaplot$nodes$label)))
+  net2 <- make_net_no_n()
+  p3 <- nmaplot(net2, label_wrap = NULL)
+  expect_true(all(grepl("k = ", p3$nmaplot$nodes$label)))
+})
+
+test_that("layouts produce one coordinate per treatment", {
+  net <- make_net()
+  for (lay in c("multi", "circle", "star")) {
+    p <- nmaplot(net, layout = lay)
+    expect_equal(nrow(p$nmaplot$nodes), length(net$trts), info = lay)
+    expect_false(any(is.na(p$nmaplot$nodes$x)), info = lay)
+  }
+  star <- nmaplot(net, layout = "star", reference = "A")
+  ref <- star$nmaplot$nodes[star$nmaplot$nodes$trt == "A", ]
+  expect_equal(unname(c(ref$x, ref$y)), c(0, 0))
+  # circle: most connected treatment sits at the top
+  circ <- nmaplot(net, layout = "circle")
+  top <- circ$nmaplot$nodes[which.max(circ$nmaplot$nodes$y), ]
+  expect_equal(top$degree, max(circ$nmaplot$nodes$degree))
+})
+
+test_that("custom layout matrix is accepted", {
+  net <- make_net()
+  m <- matrix(c(0, 0, 1, 0, 0, 1, 1, 1), ncol = 2, byrow = TRUE)
+  rownames(m) <- net$trts
+  p <- nmaplot(net, layout = m)
+  expect_equal(nrow(p$nmaplot$nodes), 4)
+  expect_error(nmaplot(net, layout = m[1:2, ]), "custom `layout`")
+})
+
+test_that("order and highlight are respected", {
+  net <- make_net()
+  p <- nmaplot(net, order = c("D", "A"), highlight = "D", highlight_color = "red")
+  nodes <- p$nmaplot$nodes
+  expect_equal(nodes$fill[nodes$trt == "D"], "red")
+  # D placed at the top of the circle (first in order)
+  expect_equal(unname(nodes$y[nodes$trt == "D"]), 1)
+  expect_error(nmaplot(net, order = "ZZZ"), "not in the network")
+})
+
+test_that("node_fill options work", {
+  net <- make_net()
+  p <- nmaplot(net, node_fill = "auto", palette = "Viridis")
+  expect_equal(length(unique(p$nmaplot$nodes$fill)), 4)
+  p <- nmaplot(net, node_fill = c(A = "red", B = "blue", C = "green", D = "black"))
+  expect_equal(p$nmaplot$nodes$fill[p$nmaplot$nodes$trt == "B"], "blue")
+  expect_error(nmaplot(net, node_fill = c("red", "blue")), "node_fill")
+})
+
+test_that("min_studies drops thin edges and edge_style multi builds", {
+  net <- make_net()
+  p_all <- nmaplot(net, min_studies = 1)
+  p_thin <- nmaplot(net, min_studies = 3)
+  expect_lt(nrow(p_thin$nmaplot$edges), nrow(p_all$nmaplot$edges))
+  expect_true(all(p_thin$nmaplot$edges$studies >= 3))
+  p <- nmaplot(net, edge_style = "multi", max_lines = 4)
+  expect_s3_class(p, "ggplot")
+  expect_error(nmaplot(net, layout = "spring"), "should be one of")
+})
+
+test_that("multi-arm polygons are detected", {
+  net <- make_net()
+  p <- nmaplot(net, multiarm = TRUE)
+  expect_true(!is.null(p$nmaplot$multiarm))
+  expect_true(nrow(p$nmaplot$multiarm) >= 3)
+  p2 <- nmaplot(net, multiarm = FALSE)
+  expect_null(p2$nmaplot$multiarm)
+})
+
+test_that("netgraph compatibility arguments are mapped", {
+  net <- make_net()
+  expect_message(
+    p <- nmaplot(net, col.points = "darkblue", number.of.studies = FALSE,
+                 plastic = FALSE, foo = 1),
+    "ignoring unsupported argument"
+  )
+  expect_true(all(p$nmaplot$nodes$fill == "darkblue"))
+})
+
+test_that("files are written in png, pdf and tiff", {
+  net <- make_net()
+  td <- tempfile("nmaplot")
+  dir.create(td)
+  files <- file.path(td, c("net.png", "net.pdf", "net.tiff"))
+  out <- nmaplot(net, file = files, width = 5, height = 5, dpi = 72)
+  expect_s3_class(out, "ggplot")
+  for (f in files) expect_true(file.exists(f), info = f)
+  expect_true(all(file.size(files) > 0))
+  expect_error(nmaplot(net, file = file.path(td, "net.svg")), "must end in")
+  unlink(td, recursive = TRUE)
+})
+
+test_that("non-netmeta input is rejected", {
+  expect_error(nmaplot(list()), "class 'netmeta'")
+})
+
+test_that("custom labels keep the sample size suffix", {
+  net <- make_net()
+  p <- nmaplot(net, labels = c(A = "No contact", B = "Self-help",
+                               C = "Individual", D = "Group"), label_wrap = NULL)
+  expect_true(all(grepl("^(No contact|Self-help|Individual|Group)\nn = ", p$nmaplot$nodes$label)))
+  p2 <- nmaplot(net, labels = c("a", "b", "c", "d"), show_n = FALSE)
+  expect_equal(p2$nmaplot$nodes$label, c("a", "b", "c", "d"))
+  expect_error(nmaplot(net, labels = c("a", "b")), "one entry per treatment")
+})
+
+test_that("ring accepts long and wide input and normalises to 100 percent", {
+  net <- make_net()
+  long <- data.frame(treatment = rep(net$trts, each = 2),
+                     group = rep(c("Low", "High"), 4),
+                     value = c(3, 1, 2, 2, 0, 4, 5, 5))
+  p <- nmaplot(net, ring = long, legend = TRUE)
+  r <- p$nmaplot$rings
+  expect_true(all(abs(tapply(r$prop, r$treatment, sum) - 1) < 1e-9))
+  expect_equal(nrow(r), 7)  # the zero segment is dropped
+  wide <- matrix(c(3, 1, 2, 2, 0, 4, 5, 5), ncol = 2, byrow = TRUE,
+                 dimnames = list(net$trts, c("Low", "High")))
+  p2 <- nmaplot(net, ring = wide, ring_colors = c(Low = "blue", High = "red"))
+  expect_equal(unique(p2$nmaplot$rings$fill[p2$nmaplot$rings$group == "High"]), "red")
+  expect_error(nmaplot(net, ring = data.frame(a = 1)), "`ring` must be")
+  expect_warning(nmaplot(net, ring = data.frame(treatment = "ZZ", group = "Low", value = 1)),
+                 "not in the network")
+})
+
+test_that("legend panel extends the window downwards", {
+  net <- make_net()
+  p0 <- nmaplot(net, legend = FALSE)
+  p1 <- nmaplot(net, legend = TRUE)
+  expect_lt(p1$coordinates$limits$y[1], p0$coordinates$limits$y[1])
+})

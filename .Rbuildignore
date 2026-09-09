@@ -1,0 +1,9 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^README\.Rmd$
+^\.github$
+^inst/examples/out$
+^\.gitignore$
+^inst/examples/.*\.nb\.html$
+^inst/examples/smoking$

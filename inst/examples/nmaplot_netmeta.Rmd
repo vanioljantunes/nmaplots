@@ -1,0 +1,41 @@
+---
+title: "nmaplot test"
+output: html_notebook
+---
+
+```{r packages}
+library(netmeta)
+library(nmaplots)
+knitr::opts_chunk$set(fig.width = 9, fig.height = 9.5, dpi = 150)
+```
+
+```{r data}
+data(Franchini2012)
+```
+
+```{r network}
+p1 <- pairwise(list(Treatment1, Treatment2, Treatment3),
+               n = list(n1, n2, n3),
+               mean = list(y1, y2, y3),
+               sd = list(sd1, sd2, sd3),
+               data = Franchini2012, studlab = Study)
+
+net1 <- netmeta(p1, sm = "MD", reference.group = "plac")
+
+nmaplot(net1, outcome = "Change in UPDRS motor score")
+```
+
+```{r ring}
+# subgroup ring, e.g. risk of bias: one row per treatment x group (counts or %)
+rob <- data.frame(treatment = rep(net1$trts, each = 3),
+                  group = rep(c("Low risk", "Some concerns", "High risk"), length(net1$trts)),
+                  value = c(3, 2, 1,  2, 2, 1,  1, 1, 1,  2, 1, 0,  1, 2, 1))
+
+nmaplot(net1, ring = rob, ring_name = "Risk of bias", outcome = "Change in UPDRS motor score")
+```
+
+```{r save}
+nmaplot(net1, ring = rob, ring_name = "Risk of bias", outcome = "Change in UPDRS motor score",
+        file = c("franchini_net_graph.png", "franchini_net_graph.pdf", "franchini_net_graph.tiff"),
+        width = 9, height = 9.5, dpi = 300)
+```

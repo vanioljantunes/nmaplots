@@ -1,0 +1,39 @@
+Number of studies: k = 7
+Number of pairwise comparisons: m = 9
+Number of observations: o = 1613
+Number of treatments: n = 5
+Number of designs: d = 5
+
+Common effects model
+
+Treatment estimate (other treatments vs 'Placebo'):
+                   MD             95% CI     z  p-value
+Bromocriptine -0.5240 [-1.4621;  0.4141] -1.09   0.2736
+Cabergoline   -0.8240 [-1.8471;  0.1991] -1.58   0.1144
+Placebo             .                  .     .        .
+Pramipexole   -1.8116 [-2.4636; -1.1595] -5.45 < 0.0001
+Ropinirole    -0.4781 [-1.4319;  0.4757] -0.98   0.3259
+
+Random effects model
+
+Treatment estimate (other treatments vs 'Placebo'):
+                   MD             95% CI     z  p-value
+Bromocriptine -0.5240 [-1.4621;  0.4141] -1.09   0.2736
+Cabergoline   -0.8240 [-1.8471;  0.1991] -1.58   0.1144
+Placebo             .                  .     .        .
+Pramipexole   -1.8116 [-2.4636; -1.1595] -5.45 < 0.0001
+Ropinirole    -0.4781 [-1.4319;  0.4757] -0.98   0.3259
+
+Quantifying heterogeneity / inconsistency:
+tau^2 < 0.0001; tau < 0.0001; I^2 = 0% [0.0%; 79.2%]
+
+Tests of heterogeneity (within designs) and inconsistency (between designs):
+                   Q d.f. p-value
+Total           2.29    4  0.6830
+Within designs  1.61    2  0.4473
+Between designs 0.68    2  0.7121
+
+Details of network meta-analysis methods:
+- Frequentist graph-theoretical approach
+- Restricted maximum-likelihood estimator for tau^2
+- Calculation of I^2 based on Q
