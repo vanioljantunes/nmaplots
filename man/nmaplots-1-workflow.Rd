@@ -31,8 +31,8 @@ object carries them (\code{n1}/\code{n2}, which \code{pairwise()} supplies when 
 
 Defaults: treatments on a polygon (\code{layout = "multi"}), node area
 proportional to the sample size, reference treatment in grey and the
-others in muted red, edge width proportional to the number of direct
-studies with that number in a small box on the edge, bold treatment name
+others in muted red, black edges whose width follows the number of direct
+studies with that number in a white circle on the edge, bold treatment name
 with \code{n = ...} underneath, centred title "Network of Interventions" with
 the outcome as subtitle, and a boxed legend under the network.
 

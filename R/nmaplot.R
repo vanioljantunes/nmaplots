@@ -5,15 +5,16 @@
 #' [netmeta::netgraph()] and renders it with 'ggplot2': node area by sample
 #' size, edge width by number of studies, study counts on the edges, treatment
 #' name and sample size at every node, an optional outer ring showing a
-#' subgroup composition per treatment (for example risk of bias), several
+#' subgroup composition per treatment (for example study design), several
 #' layouts, a bottom legend panel, and direct export to PNG, PDF or TIFF.
 #'
 #' @param x An object of class `netmeta` (from [netmeta::netmeta()]).
 #' @param layout Node arrangement. `"multi"` (default): treatments evenly
-#'   spaced on a polygon, in the order of `order`. `"circle"`: same polygon
-#'   but ordered by number of direct comparisons, most connected treatment at
-#'   the top and going clockwise. `"star"`: reference treatment in the centre,
-#'   the others on a polygon around it. A numeric matrix with two columns and
+#'   spaced on a polygon, in the order of `order`. `"circle"`: treatments on
+#'   a circle (drawn as a light guide line), ordered by number of direct
+#'   comparisons, most connected treatment at the top and going clockwise.
+#'   `"star"`: reference treatment in the centre, the others on a polygon
+#'   around it. A numeric matrix with two columns and
 #'   one row per treatment (row names = treatment names) gives a custom
 #'   layout.
 #' @param order Character vector giving the order of treatments around the
@@ -52,8 +53,8 @@
 #'   reference look; use `"sans"` for Helvetica-like output.
 #' @param label_wrap Integer. Wrap treatment names longer than this many
 #'   characters. `NULL` disables wrapping.
-#' @param label_size Font size (points) of the treatment names. The sample
-#'   size line is drawn at 85 percent of this size.
+#' @param label_size Font size (points) of the treatment names and of the
+#'   sample-size line under them.
 #' @param label_color Colour of the treatment names.
 #' @param label_offset Gap between the node (or its ring) and the label, in
 #'   layout units (the network spans roughly -1 to 1).
@@ -86,8 +87,8 @@
 #' @param edge_labels Logical. Print the number of studies on each edge.
 #' @param edge_label_size Font size (points) of the edge labels.
 #' @param edge_label_color Text and border colour of the edge labels.
-#' @param edge_label_fill Background of the edge labels. `NA` prints plain
-#'   text nudged off the line instead of a box.
+#' @param edge_label_fill Fill of the circle that carries the study count on
+#'   each edge. `NA` prints plain text nudged off the line instead.
 #' @param edge_label_offset Nudge (layout units) for plain-text edge labels.
 #' @param multiarm Logical. Shade the polygon of each multi-arm study.
 #' @param multiarm_fill,multiarm_alpha Fill and opacity of those polygons.
@@ -98,6 +99,9 @@
 #'   text scale from it.
 #' @param title_color Colour of the title.
 #' @param title_align `"left"` or `"center"`.
+#' @param circle_guide Logical. For `layout = "circle"`, draw the circle the
+#'   nodes sit on as a light dashed line.
+#' @param circle_color Colour of that guide line.
 #' @param grid Logical. Light background grid.
 #' @param grid_color Colour of the grid lines.
 #' @param background Background colour.
@@ -130,12 +134,11 @@
 #'   net1 <- netmeta(p1, sm = "MD", reference.group = "plac")
 #'   nmaplot(net1, title = "Parkinson", subtitle = "Franchini 2012")
 #'
-#'   rob <- data.frame(treatment = rep(net1$trts, each = 3),
-#'                     group = rep(c("Low risk", "Some concerns", "High risk"),
-#'                                 length(net1$trts)),
-#'                     value = c(3, 2, 1, 2, 2, 1, 1, 1, 1, 2, 1, 0, 1, 2, 1))
-#'   nmaplot(net1, ring = rob, legend = TRUE, title = "Parkinson",
-#'           subtitle = "Outer ring: risk of bias")
+#'   design <- data.frame(treatment = rep(net1$trts, each = 2),
+#'                        group = rep(c("RCT", "PSM"), length(net1$trts)),
+#'                        value = c(4, 2,  3, 2,  2, 1,  3, 0,  2, 2))
+#'   nmaplot(net1, ring = design, ring_name = "Study design",
+#'           outcome = "Change in UPDRS motor score")
 #' }
 #'
 #' @importFrom ggplot2 ggplot aes geom_segment geom_polygon geom_text geom_label geom_rect coord_equal labs theme theme_void element_rect element_line element_text element_blank margin unit ggsave scale_fill_identity scale_colour_identity scale_linewidth_identity .data
@@ -170,14 +173,14 @@ nmaplot <- function(x,
                     highlight_color = "#E4572E",
                     edge_width = c("studies", "equal"),
                     edge_width_range = c(0.6, 4.5),
-                    edge_color = "#9AA0A6",
-                    edge_alpha = 0.95,
+                    edge_color = "black",
+                    edge_alpha = 1,
                     edge_style = c("single", "multi"),
                     max_lines = 6,
                     min_studies = 1,
                     edge_labels = TRUE,
-                    edge_label_size = 9,
-                    edge_label_color = "#3A3F47",
+                    edge_label_size = 10,
+                    edge_label_color = "black",
                     edge_label_fill = "white",
                     edge_label_offset = 0.05,
                     multiarm = FALSE,
@@ -189,6 +192,8 @@ nmaplot <- function(x,
                     title_size = 20,
                     title_color = "#1F2A44",
                     title_align = c("center", "left"),
+                    circle_guide = TRUE,
+                    circle_color = "#D5D8DC",
                     grid = FALSE,
                     grid_color = "grey88",
                     background = "white",
@@ -253,6 +258,7 @@ nmaplot <- function(x,
       reference <- if (length(hit) == 1) hit else trts[which.max(net$degree)]
     }
   }
+  if (is.character(layout)) layout <- match.arg(layout, c("multi", "circle", "star"))
   coords <- nma_layout(layout, trts, order, reference, net)
 
   nodes <- data.frame(
@@ -361,6 +367,18 @@ nmaplot <- function(x,
   nodes$ly <- nodes$y + uy * off
   nodes$hjust <- (1 - ux) / 2
   nodes$vjust <- (1 - uy) / 2
+  # a node sitting in the middle of the network (star layout) has spokes all
+  # around it: write its label inside the disc when the disc is wide enough
+  upi0 <- 2.9 / max(width, 1)
+  chars <- vapply(strsplit(nodes$name, "\n", fixed = TRUE),
+                  function(v) max(nchar(v)), numeric(1))
+  half_w <- chars * label_size * 0.55 / 72 * upi0 / 2
+  centre_node <- sqrt(dx^2 + dy^2) < 0.15 & nodes$degree >= 3
+  nodes$inside <- centre_node & nodes$size >= half_w * 1.05
+  nodes$lx[nodes$inside] <- nodes$x[nodes$inside]
+  nodes$ly[nodes$inside] <- nodes$y[nodes$inside]
+  nodes$hjust[nodes$inside] <- 0.5
+  nodes$vjust[nodes$inside] <- 0.5
 
   # ---- edges -----------------------------------------------------------------
   edges <- net$edges
@@ -421,12 +439,22 @@ nmaplot <- function(x,
   leg <- NULL
   if (isTRUE(legend)) {
     leg <- build_legend(nodes, edges, rings, ring_groups, size_label,
-                        edge_width_range, ring_title, win, has_n = net$has.n)
+                        edge_width_range, ring_title, win, has_n = net$has.n,
+                        rc = edge_label_size * 1.05 / 72 * upi)
     ylo <- leg$ylo
   }
 
   # ---- draw ------------------------------------------------------------------
   p <- ggplot()
+
+  if (is.character(layout) && identical(layout[1], "circle") && isTRUE(circle_guide)) {
+    guide <- circle_poly(mean(nodes$x), mean(nodes$y), 1, n = 180)
+    guide <- rbind(guide, guide[1, ])
+    p <- p + ggplot2::geom_path(
+      data = guide, aes(x = .data$x, y = .data$y),
+      colour = circle_color, linewidth = 0.5, linetype = "22"
+    )
+  }
 
   if (!is.null(polys) && nrow(polys)) {
     p <- p + geom_polygon(
@@ -482,7 +510,7 @@ nmaplot <- function(x,
           nb <- c(edges$treat2[edges$treat1 == t], edges$treat1[edges$treat2 == t])
           k <- match(nb, nodes$trt)
           ea <- atan2(nodes$y[k] - nodes$y[j], nodes$x[k] - nodes$x[j])
-          pct_angle(pl$a0[i], pl$a1[i], ea)
+          pct_angle(pl$a0[i], pl$a1[i], c(ea, ang[j]))
         }, numeric(1))
         rr <- pl$r1 + 0.02
         pl$px <- pl$x0 + rr * cos(am)
@@ -537,14 +565,23 @@ nmaplot <- function(x,
         fontface = "bold", family = font_family
       )
     } else {
-      p <- p + geom_label(
-        data = edges,
-        aes(x = .data$mx, y = .data$my, label = .data$studies),
-        size = edge_label_size / ggplot2::.pt, colour = edge_label_color,
-        fill = edge_label_fill, linewidth = 0.25,
-        label.padding = unit(0.22, "lines"), label.r = unit(0.08, "lines"),
-        fontface = "bold", family = font_family
-      )
+      # white disc with a black border, number inside, sized to the font
+      rc <- edge_label_size * 1.05 / 72 * upi * (1 + 0.06 * (nchar(edges$studies) - 1))
+      edges <- spread_edge_labels(edges, rc)
+      dots_df <- do.call(rbind, lapply(seq_len(nrow(edges)), function(i) {
+        d <- circle_poly(edges$mx[i], edges$my[i], rc[i], n = 48)
+        d$id <- i
+        d
+      }))
+      p <- p +
+        geom_polygon(data = dots_df,
+                     aes(x = .data$x, y = .data$y, group = .data$id),
+                     fill = edge_label_fill, colour = edge_label_color,
+                     linewidth = 0.45) +
+        geom_text(data = edges,
+                  aes(x = .data$mx, y = .data$my, label = .data$studies),
+                  size = edge_label_size / ggplot2::.pt, colour = edge_label_color,
+                  fontface = "bold", family = font_family)
     }
   }
 
@@ -558,19 +595,22 @@ nmaplot <- function(x,
   nodes$n_y <- yb + line_h / 2
   nodes$name_y <- yb + ifelse(two, line_h, 0) + nl * line_h / 2
   nodes$name_v <- 0.5
+  nodes$name_col <- ifelse(nodes$inside, contrast_text(nodes$fill), label_color)
+  nodes$n_col <- ifelse(nodes$inside, contrast_text(nodes$fill),
+                        soften(label_color, 0.25))
   p <- p + geom_text(
     data = nodes,
     aes(x = .data$lx, y = .data$name_y, label = .data$name, hjust = .data$hjust,
-        vjust = .data$name_v),
-    size = label_size / ggplot2::.pt, colour = label_color, fontface = "bold",
+        vjust = .data$name_v, colour = .data$name_col),
+    size = label_size / ggplot2::.pt, fontface = "bold",
     family = font_family, lineheight = 0.9
   )
   if (any(two)) {
     p <- p + geom_text(
       data = nodes[two, ],
-      aes(x = .data$lx, y = .data$n_y, label = .data$nline, hjust = .data$hjust),
-      vjust = 0.5, size = label_size * 0.85 / ggplot2::.pt,
-      colour = soften(label_color, 0.25), family = font_family
+      aes(x = .data$lx, y = .data$n_y, label = .data$nline, hjust = .data$hjust,
+          colour = .data$n_col),
+      vjust = 0.5, size = label_size / ggplot2::.pt, family = font_family
     )
   }
 
@@ -590,7 +630,14 @@ nmaplot <- function(x,
       geom_segment(data = leg$lines,
                    aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
                        linewidth = .data$width),
-                   colour = edge_color, lineend = "round")
+                   colour = edge_color, lineend = "round") +
+      geom_polygon(data = leg$dot,
+                   aes(x = .data$x, y = .data$y, group = .data$id),
+                   fill = edge_label_fill, colour = edge_label_color, linewidth = 0.45) +
+      geom_text(data = leg$dot_text,
+                aes(x = .data$x, y = .data$y, label = .data$label),
+                size = edge_label_size / ggplot2::.pt, colour = edge_label_color,
+                fontface = "bold", family = font_family)
     if (!is.null(leg$squares) && nrow(leg$squares)) {
       p <- p + geom_rect(data = leg$squares,
                          aes(xmin = .data$xmin, xmax = .data$xmax, ymin = .data$ymin,

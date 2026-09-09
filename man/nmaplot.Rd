@@ -35,14 +35,14 @@ nmaplot(
   highlight_color = "#E4572E",
   edge_width = c("studies", "equal"),
   edge_width_range = c(0.6, 4.5),
-  edge_color = "#9AA0A6",
-  edge_alpha = 0.95,
+  edge_color = "black",
+  edge_alpha = 1,
   edge_style = c("single", "multi"),
   max_lines = 6,
   min_studies = 1,
   edge_labels = TRUE,
-  edge_label_size = 9,
-  edge_label_color = "#3A3F47",
+  edge_label_size = 10,
+  edge_label_color = "black",
   edge_label_fill = "white",
   edge_label_offset = 0.05,
   multiarm = FALSE,
@@ -54,6 +54,8 @@ nmaplot(
   title_size = 20,
   title_color = "#1F2A44",
   title_align = c("center", "left"),
+  circle_guide = TRUE,
+  circle_color = "#D5D8DC",
   grid = FALSE,
   grid_color = "grey88",
   background = "white",
@@ -71,10 +73,11 @@ nmaplot(
 \item{x}{An object of class \code{netmeta} (from \code{\link[netmeta:netmeta]{netmeta::netmeta()}}).}
 
 \item{layout}{Node arrangement. \code{"multi"} (default): treatments evenly
-spaced on a polygon, in the order of \code{order}. \code{"circle"}: same polygon
-but ordered by number of direct comparisons, most connected treatment at
-the top and going clockwise. \code{"star"}: reference treatment in the centre,
-the others on a polygon around it. A numeric matrix with two columns and
+spaced on a polygon, in the order of \code{order}. \code{"circle"}: treatments on
+a circle (drawn as a light guide line), ordered by number of direct
+comparisons, most connected treatment at the top and going clockwise.
+\code{"star"}: reference treatment in the centre, the others on a polygon
+around it. A numeric matrix with two columns and
 one row per treatment (row names = treatment names) gives a custom
 layout.}
 
@@ -128,8 +131,8 @@ reference look; use \code{"sans"} for Helvetica-like output.}
 \item{label_wrap}{Integer. Wrap treatment names longer than this many
 characters. \code{NULL} disables wrapping.}
 
-\item{label_size}{Font size (points) of the treatment names. The sample
-size line is drawn at 85 percent of this size.}
+\item{label_size}{Font size (points) of the treatment names and of the
+sample-size line under them.}
 
 \item{label_color}{Colour of the treatment names.}
 
@@ -184,8 +187,8 @@ number of studies; \code{"multi"} draws one parallel line per study (up to
 
 \item{edge_label_color}{Text and border colour of the edge labels.}
 
-\item{edge_label_fill}{Background of the edge labels. \code{NA} prints plain
-text nudged off the line instead of a box.}
+\item{edge_label_fill}{Fill of the circle that carries the study count on
+each edge. \code{NA} prints plain text nudged off the line instead.}
 
 \item{edge_label_offset}{Nudge (layout units) for plain-text edge labels.}
 
@@ -203,6 +206,11 @@ text scale from it.}
 \item{title_color}{Colour of the title.}
 
 \item{title_align}{\code{"left"} or \code{"center"}.}
+
+\item{circle_guide}{Logical. For \code{layout = "circle"}, draw the circle the
+nodes sit on as a light dashed line.}
+
+\item{circle_color}{Colour of that guide line.}
 
 \item{grid}{Logical. Light background grid.}
 
@@ -241,7 +249,7 @@ Draws the evidence network of a network meta-analysis fitted with
 \code{\link[netmeta:netgraph]{netmeta::netgraph()}} and renders it with 'ggplot2': node area by sample
 size, edge width by number of studies, study counts on the edges, treatment
 name and sample size at every node, an optional outer ring showing a
-subgroup composition per treatment (for example risk of bias), several
+subgroup composition per treatment (for example study design), several
 layouts, a bottom legend panel, and direct export to PNG, PDF or TIFF.
 }
 \examples{
@@ -255,12 +263,11 @@ if (requireNamespace("netmeta", quietly = TRUE)) {
   net1 <- netmeta(p1, sm = "MD", reference.group = "plac")
   nmaplot(net1, title = "Parkinson", subtitle = "Franchini 2012")
 
-  rob <- data.frame(treatment = rep(net1$trts, each = 3),
-                    group = rep(c("Low risk", "Some concerns", "High risk"),
-                                length(net1$trts)),
-                    value = c(3, 2, 1, 2, 2, 1, 1, 1, 1, 2, 1, 0, 1, 2, 1))
-  nmaplot(net1, ring = rob, legend = TRUE, title = "Parkinson",
-          subtitle = "Outer ring: risk of bias")
+  design <- data.frame(treatment = rep(net1$trts, each = 2),
+                       group = rep(c("RCT", "PSM"), length(net1$trts)),
+                       value = c(4, 2,  3, 2,  2, 1,  3, 0,  2, 2))
+  nmaplot(net1, ring = design, ring_name = "Study design",
+          outcome = "Change in UPDRS motor score")
 }
 
 }

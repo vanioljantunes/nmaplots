@@ -78,7 +78,7 @@ resolve_ring_colors <- function(ring_colors, groups) {
 # Legend panel drawn in data space under the network: framed sections for
 # node size, edge width and (if present) ring groups.
 build_legend <- function(nodes, edges, rings, ring_groups, size_label,
-                         edge_width_range, ring_title, win, has_n) {
+                         edge_width_range, ring_title, win, has_n, rc) {
   n_sec <- 2 + !is.null(rings)
   lim <- win$hw
   gap <- 0.04 * lim
@@ -127,19 +127,22 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
                             face = "plain", hjust = 0, stringsAsFactors = FALSE)
   }
 
-  # section 2: edge width
+  # section 2: one line with the circled study count
   text[[4]] <- data.frame(x = xs[2] + pad, y = ty,
-                          label = "Edge width = number of direct studies",
+                          label = "Number in the circle = direct studies",
                           face = "bold", hjust = 0, stringsAsFactors = FALSE)
-  ks <- sort(unique(edges$studies), decreasing = TRUE)
-  ks <- unique(c(ks[1], ks[ceiling(length(ks) / 2)], ks[length(ks)]))
-  ws <- if (length(ks) > 1) rescale_range(ks, range(edges$width)) else mean(edges$width)
-  ys <- seq(ty - 0.09 * lim, bottom + pad + 0.02 * lim,
-            length.out = max(length(ks), 2))[seq_along(ks)]
-  lines[[1]] <- data.frame(x = xs[2] + pad, xend = xs[2] + pad + 0.32 * wsec,
-                           y = ys, yend = ys, width = ws)
-  text[[5]] <- data.frame(x = xs[2] + pad + 0.32 * wsec + 0.03 * lim, y = ys,
-                          label = paste0(ks, ifelse(ks == 1, " study", " studies")),
+  ly <- cy
+  lx0 <- xs[2] + pad
+  lx1 <- xs[2] + pad + 0.38 * wsec
+  lines[[1]] <- data.frame(x = lx0, xend = lx1, y = ly, yend = ly,
+                           width = if (nrow(edges)) mean(range(edges$width)) else 1)
+  kex <- if (nrow(edges)) stats::median(edges$studies) else 1
+  dot <- circle_poly((lx0 + lx1) / 2, ly, rc, n = 48)
+  dot$id <- "L"
+  dot_text <- data.frame(x = (lx0 + lx1) / 2, y = ly, label = round(kex),
+                         stringsAsFactors = FALSE)
+  text[[5]] <- data.frame(x = lx1 + 0.03 * lim, y = ly,
+                          label = "studies comparing\nthe two treatments\n(line width follows it)",
                           face = "plain", hjust = 0, stringsAsFactors = FALSE)
 
   # section 3: ring groups
@@ -149,8 +152,8 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
     cols <- unique(rings[, c("group", "fill")])
     cols <- cols[match(ring_groups, cols$group), , drop = FALSE]
     cols <- cols[!is.na(cols$group), , drop = FALSE]
-    ys <- seq(ty - 0.09 * lim, bottom + pad + 0.02 * lim,
-              length.out = max(nrow(cols), 2))[seq_len(nrow(cols))]
+    step <- min(0.11 * lim, (ty - 0.09 * lim - bottom - pad) / max(nrow(cols) - 1, 1))
+    ys <- ty - 0.09 * lim - (seq_len(nrow(cols)) - 1) * step
     sq <- 0.03 * lim
     squares <- data.frame(xmin = xs[3] + pad, xmax = xs[3] + pad + 2 * sq,
                           ymin = ys - sq, ymax = ys + sq, fill = cols$fill,
@@ -161,6 +164,6 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
   }
 
   list(boxes = boxes, dividers = dividers, circles = do.call(rbind, circles),
-       lines = do.call(rbind, lines),
+       lines = do.call(rbind, lines), dot = dot, dot_text = dot_text,
        squares = squares, text = do.call(rbind, text), ylo = bottom - gap)
 }

@@ -12,7 +12,8 @@ Guide 3: layouts, colours, labels, legend and titles
 \item{\code{layout = "multi"}}{Default. Treatments evenly spaced on a polygon
 in the order of \code{order} (defaults to the order in the \code{netmeta}
 object).}
-\item{\code{layout = "circle"}}{Same polygon, but the most connected
+\item{\code{layout = "circle"}}{Treatments on a circle, drawn as a light
+dashed guide (\code{circle_guide}, \code{circle_color}); the most connected
 treatment sits at the top and the others follow clockwise by
 decreasing number of direct comparisons.}
 \item{\code{layout = "star"}}{The reference treatment in the centre, the
@@ -37,9 +38,10 @@ chosen treatments with \code{highlight_color}.
 \section{Edges}{
 
 Width follows the number of direct studies (\code{edge_width = "studies"})
-within \code{edge_width_range} (mm). The count is printed in a small box on
-each edge (\code{edge_labels}); \code{edge_label_fill = NA} prints plain numbers
-nudged off the line instead. \code{edge_style = "multi"} draws one thin line
+within \code{edge_width_range} (mm); edges are black (\code{edge_color}). The count
+is printed in a white circle with a black border on each edge
+(\code{edge_labels}, \code{edge_label_size}); \code{edge_label_fill = NA} prints plain
+numbers nudged off the line instead. \code{edge_style = "multi"} draws one thin line
 per study; \code{min_studies} hides comparisons with fewer studies.
 \code{multiarm = TRUE} shades the polygon of each multi-arm trial.
 }
@@ -56,8 +58,8 @@ does not cross an edge; \code{label_offset} moves it further out.
 \section{Legend and titles}{
 
 The legend (\code{legend = TRUE} by default) is one framed box under the
-network with sections for node size, edge width and, when a ring is
-drawn, the ring groups. \code{title} defaults to "Network of Interventions",
+network with sections for node size, the circled study count on the
+edges and, when a ring is drawn, the ring groups. \code{title} defaults to "Network of Interventions",
 centred (\code{title_align = "left"} for the other style); \code{outcome} becomes
 the subtitle; \code{caption} is printed in italics at the bottom right.
 \code{font_family = "serif"} gives the reference look, \code{"sans"} a plainer one.

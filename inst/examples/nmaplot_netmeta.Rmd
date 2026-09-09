@@ -26,16 +26,21 @@ nmaplot(net1, outcome = "Change in UPDRS motor score")
 ```
 
 ```{r ring}
-# subgroup ring, e.g. risk of bias: one row per treatment x group (counts or %)
-rob <- data.frame(treatment = rep(net1$trts, each = 3),
-                  group = rep(c("Low risk", "Some concerns", "High risk"), length(net1$trts)),
-                  value = c(3, 2, 1,  2, 2, 1,  1, 1, 1,  2, 1, 0,  1, 2, 1))
+# subgroup ring, e.g. study design (RCT vs PSM): one row per treatment x group (counts or %)
+design <- data.frame(treatment = rep(net1$trts, each = 2),
+                     group = rep(c("RCT", "PSM"), length(net1$trts)),
+                     value = c(4, 2,  3, 2,  2, 1,  3, 0,  2, 2))
 
-nmaplot(net1, ring = rob, ring_name = "Risk of bias", outcome = "Change in UPDRS motor score")
+nmaplot(net1, ring = design, ring_name = "Study design", outcome = "Change in UPDRS motor score")
+```
+
+```{r layouts}
+nmaplot(net1, ring = design, ring_name = "Study design", outcome = "Change in UPDRS motor score", layout = "circle")
+nmaplot(net1, ring = design, ring_name = "Study design", outcome = "Change in UPDRS motor score", layout = "star")
 ```
 
 ```{r save}
-nmaplot(net1, ring = rob, ring_name = "Risk of bias", outcome = "Change in UPDRS motor score",
+nmaplot(net1, ring = design, ring_name = "Study design", outcome = "Change in UPDRS motor score",
         file = c("franchini_net_graph.png", "franchini_net_graph.pdf", "franchini_net_graph.tiff"),
         width = 9, height = 9.5, dpi = 300)
 ```

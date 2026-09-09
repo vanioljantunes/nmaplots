@@ -25,8 +25,8 @@
 #' ```
 #' Defaults: treatments on a polygon (`layout = "multi"`), node area
 #' proportional to the sample size, reference treatment in grey and the
-#' others in muted red, edge width proportional to the number of direct
-#' studies with that number in a small box on the edge, bold treatment name
+#' others in muted red, black edges whose width follows the number of direct
+#' studies with that number in a white circle on the edge, bold treatment name
 #' with `n = ...` underneath, centred title "Network of Interventions" with
 #' the outcome as subtitle, and a boxed legend under the network.
 #'
@@ -55,17 +55,17 @@ NULL
 #'
 #' @description
 #' The ring around each node shows how the studies (or patients) of that
-#' treatment split across the levels of a subgroup. Risk of bias is the usual
-#' case, but any categorical split works: study design, region, dose class,
-#' funding source.
+#' treatment split across the levels of a subgroup: study design (RCT versus
+#' propensity-score matched cohorts), risk of bias, region, dose class,
+#' funding source, anything you can count per treatment.
 #'
 #' @section What to pass:
 #' A long data frame with one row per treatment and group:
 #' ```r
-#' rob <- data.frame(treatment = rep(net1$trts, each = 3),
-#'                   group = rep(c("Low risk", "Some concerns", "High risk"), 5),
-#'                   value = c(3, 2, 1,  2, 2, 1,  1, 1, 1,  2, 1, 0,  1, 2, 1))
-#' nmaplot(net1, ring = rob, ring_name = "Risk of bias",
+#' design <- data.frame(treatment = rep(net1$trts, each = 2),
+#'                      group = rep(c("RCT", "PSM"), 5),
+#'                      value = c(4, 2,  3, 2,  2, 1,  3, 0,  2, 2))
+#' nmaplot(net1, ring = design, ring_name = "Study design",
 #'         outcome = "Change in UPDRS motor score")
 #' ```
 #' The first three columns are used whatever their names: treatment, group,
@@ -85,9 +85,9 @@ NULL
 #' readable.
 #'
 #' @section Naming and colours:
-#' `ring_name` (e.g. `"Risk of bias"`) is appended to the subtitle as
-#' "Outer ring: risk of bias" and names the legend section
-#' "Outer ring = Risk of bias". `ring_title` overrides the legend text only.
+#' `ring_name` (e.g. `"Study design"`) is appended to the subtitle as
+#' "Outer ring: study design" and names the legend section
+#' "Outer ring = Study design". `ring_title` overrides the legend text only.
 #' `ring_colors` takes a named vector (names = groups) or a vector in group
 #' order; the default is muted blue, red, green, then yellow, purple, orange.
 #'
@@ -101,7 +101,8 @@ NULL
 #'   \item{`layout = "multi"`}{Default. Treatments evenly spaced on a polygon
 #'     in the order of `order` (defaults to the order in the `netmeta`
 #'     object).}
-#'   \item{`layout = "circle"`}{Same polygon, but the most connected
+#'   \item{`layout = "circle"`}{Treatments on a circle, drawn as a light
+#'     dashed guide (`circle_guide`, `circle_color`); the most connected
 #'     treatment sits at the top and the others follow clockwise by
 #'     decreasing number of direct comparisons.}
 #'   \item{`layout = "star"`}{The reference treatment in the centre, the
@@ -122,9 +123,10 @@ NULL
 #'
 #' @section Edges:
 #' Width follows the number of direct studies (`edge_width = "studies"`)
-#' within `edge_width_range` (mm). The count is printed in a small box on
-#' each edge (`edge_labels`); `edge_label_fill = NA` prints plain numbers
-#' nudged off the line instead. `edge_style = "multi"` draws one thin line
+#' within `edge_width_range` (mm); edges are black (`edge_color`). The count
+#' is printed in a white circle with a black border on each edge
+#' (`edge_labels`, `edge_label_size`); `edge_label_fill = NA` prints plain
+#' numbers nudged off the line instead. `edge_style = "multi"` draws one thin line
 #' per study; `min_studies` hides comparisons with fewer studies.
 #' `multiarm = TRUE` shades the polygon of each multi-arm trial.
 #'
@@ -137,8 +139,8 @@ NULL
 #'
 #' @section Legend and titles:
 #' The legend (`legend = TRUE` by default) is one framed box under the
-#' network with sections for node size, edge width and, when a ring is
-#' drawn, the ring groups. `title` defaults to "Network of Interventions",
+#' network with sections for node size, the circled study count on the
+#' edges and, when a ring is drawn, the ring groups. `title` defaults to "Network of Interventions",
 #' centred (`title_align = "left"` for the other style); `outcome` becomes
 #' the subtitle; `caption` is printed in italics at the bottom right.
 #' `font_family = "serif"` gives the reference look, `"sans"` a plainer one.

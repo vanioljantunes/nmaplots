@@ -28,20 +28,20 @@ nmaplot(net, labels = labs, outcome = "Smoking cessation at 6 to 12 months",
                  file.path(out, "default.tiff")),
         width = 9, height = 9)
 
-# 2. Outer ring with a subgroup composition (here risk of bias)
-rob <- data.frame(treatment = rep(net$trts, each = 3),
-                  group = rep(c("Low risk", "Some concerns", "High risk"), 4),
-                  value = c(2, 1, 0,  1, 1, 1,  8, 5, 2,  3, 1, 0))
-nmaplot(net, labels = labs, ring = rob, ring_name = "Risk of bias",
+# 2. Outer ring with a subgroup composition (here study design: RCT vs PSM)
+design <- data.frame(treatment = rep(net$trts, each = 2),
+                     group = rep(c("RCT", "PSM"), 4),
+                     value = c(3, 0,  2, 1,  11, 4,  3, 1))
+nmaplot(net, labels = labs, ring = design, ring_name = "Study design",
         outcome = "Smoking cessation at 6 to 12 months",
         file = c(file.path(fig, "ring.png"), file.path(out, "ring.pdf")),
         width = 9, height = 9.5)
 
 # 3. Same ring plot in the other two layouts (kept in inst/examples/out)
-nmaplot(net, labels = labs, ring = rob, ring_name = "Risk of bias",
+nmaplot(net, labels = labs, ring = design, ring_name = "Study design",
         outcome = "Smoking cessation at 6 to 12 months", layout = "star",
         file = file.path(out, "ring_star.png"), width = 9, height = 9.5)
-nmaplot(net, labels = labs, ring = rob, ring_name = "Risk of bias",
+nmaplot(net, labels = labs, ring = design, ring_name = "Study design",
         outcome = "Smoking cessation at 6 to 12 months", layout = "circle",
         file = file.path(out, "ring_circle.png"), width = 9, height = 9.5)
 

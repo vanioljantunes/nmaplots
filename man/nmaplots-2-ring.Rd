@@ -5,18 +5,18 @@
 \title{Guide 2: the outer ring, a subgroup composition per treatment}
 \description{
 The ring around each node shows how the studies (or patients) of that
-treatment split across the levels of a subgroup. Risk of bias is the usual
-case, but any categorical split works: study design, region, dose class,
-funding source.
+treatment split across the levels of a subgroup: study design (RCT versus
+propensity-score matched cohorts), risk of bias, region, dose class,
+funding source, anything you can count per treatment.
 }
 \section{What to pass}{
 
 A long data frame with one row per treatment and group:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{rob <- data.frame(treatment = rep(net1$trts, each = 3),
-                  group = rep(c("Low risk", "Some concerns", "High risk"), 5),
-                  value = c(3, 2, 1,  2, 2, 1,  1, 1, 1,  2, 1, 0,  1, 2, 1))
-nmaplot(net1, ring = rob, ring_name = "Risk of bias",
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{design <- data.frame(treatment = rep(net1$trts, each = 2),
+                     group = rep(c("RCT", "PSM"), 5),
+                     value = c(4, 2,  3, 2,  2, 1,  3, 0,  2, 2))
+nmaplot(net1, ring = design, ring_name = "Study design",
         outcome = "Change in UPDRS motor score")
 }\if{html}{\out{</div>}}
 
@@ -41,9 +41,9 @@ readable.
 
 \section{Naming and colours}{
 
-\code{ring_name} (e.g. \code{"Risk of bias"}) is appended to the subtitle as
-"Outer ring: risk of bias" and names the legend section
-"Outer ring = Risk of bias". \code{ring_title} overrides the legend text only.
+\code{ring_name} (e.g. \code{"Study design"}) is appended to the subtitle as
+"Outer ring: study design" and names the legend section
+"Outer ring = Study design". \code{ring_title} overrides the legend text only.
 \code{ring_colors} takes a named vector (names = groups) or a vector in group
 order; the default is muted blue, red, green, then yellow, purple, orange.
 }

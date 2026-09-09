@@ -313,3 +313,38 @@ soften <- function(col, amount) {
   out <- rgb * (1 - amount) + mid * amount
   grDevices::rgb(out[1], out[2], out[3], maxColorValue = 255)
 }
+
+# Black or white, whichever reads better on `fill`.
+contrast_text <- function(fill) {
+  rgb <- grDevices::col2rgb(fill)
+  lum <- (0.299 * rgb[1, ] + 0.587 * rgb[2, ] + 0.114 * rgb[3, ]) / 255
+  ifelse(lum > 0.6, "#1F2A44", "white")
+}
+
+# Edge-label circles that would overlap (typically two diagonals crossing at
+# the centre) are pushed apart along their own edges.
+spread_edge_labels <- function(edges, rc) {
+  n <- nrow(edges)
+  if (n < 2) return(edges)
+  ex <- edges$xend - edges$x
+  ey <- edges$yend - edges$y
+  el <- sqrt(ex^2 + ey^2)
+  el[el == 0] <- 1
+  for (it in 1:3) {
+    moved <- FALSE
+    for (i in seq_len(n - 1)) for (j in (i + 1):n) {
+      d <- sqrt((edges$mx[i] - edges$mx[j])^2 + (edges$my[i] - edges$my[j])^2)
+      need <- (rc[i] + rc[j]) * 1.15
+      if (d < need) {
+        shift <- (need - d) / 2 + 0.5 * rc[i]
+        edges$mx[i] <- edges$mx[i] + ex[i] / el[i] * shift
+        edges$my[i] <- edges$my[i] + ey[i] / el[i] * shift
+        edges$mx[j] <- edges$mx[j] - ex[j] / el[j] * shift
+        edges$my[j] <- edges$my[j] - ey[j] / el[j] * shift
+        moved <- TRUE
+      }
+    }
+    if (!moved) break
+  }
+  edges
+}
