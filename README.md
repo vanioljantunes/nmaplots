@@ -5,7 +5,7 @@ Publication-quality network plots for `netmeta` objects, in one function.
 `nmaplot()` takes the object returned by `netmeta::netmeta()`, exactly like
 `netmeta::netgraph()`, and draws the evidence network with ggplot2: node
 area by sample size, black edges with the number of studies in a circle,
-treatment name plus `n = 1,234` at every node, an optional outer ring per
+treatment name plus `n = 1,234 (18% of total)` at every node, an optional outer ring per
 node showing a subgroup composition (study design, risk of bias, region,
 anything), and a framed legend panel.
 
@@ -64,7 +64,7 @@ nmaplot(net1, ring = design, ring_name = "Study design",
 | Number of studies on each connection | circled count, `edge_labels = TRUE` (default), `edge_label_size`, `edge_label_fill` (`NA` = plain text) |
 | One line per study between two nodes | `edge_style = "multi"`, `max_lines` |
 | Hide weakly connected comparisons | `min_studies` |
-| Sample size of each group in the label | `show_n = TRUE` (default); falls back to number of studies `(k = ...)` when the object has no sample sizes |
+| Sample size and share of total under each name | `show_n = TRUE` (default); falls back to number of studies `k = ...` when the object has no sample sizes |
 | Colours | `node_fill` (single colour, one per treatment, or `"auto"` + `palette`), `reference_fill` (grey reference node), `node_color`, `edge_color`, `highlight` + `highlight_color`, `background`, `label_color` |
 | Node size | `node_size = "n" / "studies" / "equal"` or numeric, `node_size_range` |
 | Edge width | `edge_width = "studies" / "equal"` or numeric, `edge_width_range` |

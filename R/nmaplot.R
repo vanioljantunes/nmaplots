@@ -26,7 +26,8 @@
 #'   `netmeta` object.
 #' @param labels Optional character vector of display names for the
 #'   treatments, in the order of `x$trts` (or a named vector).
-#' @param show_n Logical. Print the sample size (`n = 1,234`) under each
+#' @param show_n Logical. Print the sample size and its share of all
+#'   randomised participants (`n = 1,234 (18% of total)`) under each
 #'   treatment name. When the `netmeta` object has no sample sizes the number
 #'   of studies is printed instead (`k = 4`).
 #' @param ring Optional subgroup composition drawn as a ring around each node.
@@ -159,7 +160,7 @@ nmaplot <- function(x,
                     outcome = NULL,
                     font_family = "serif",
                     label_wrap = 18,
-                    label_size = 12,
+                    label_size = 14,
                     label_color = "#1F2A44",
                     label_offset = 0.08,
                     node_size = c("n", "studies", "equal"),
@@ -179,7 +180,7 @@ nmaplot <- function(x,
                     max_lines = 6,
                     min_studies = 1,
                     edge_labels = TRUE,
-                    edge_label_size = 10,
+                    edge_label_size = 11,
                     edge_label_color = "black",
                     edge_label_fill = "white",
                     edge_label_offset = 0.05,
@@ -189,7 +190,7 @@ nmaplot <- function(x,
                     title = "Network of Interventions",
                     subtitle = NULL,
                     caption = NULL,
-                    title_size = 20,
+                    title_size = 22,
                     title_color = "#1F2A44",
                     title_align = c("center", "left"),
                     circle_guide = TRUE,
@@ -198,7 +199,7 @@ nmaplot <- function(x,
                     grid_color = "grey88",
                     background = "white",
                     legend = TRUE,
-                    legend_size = 9,
+                    legend_size = 11,
                     margin = 0.06,
                     file = NULL,
                     width = 9,
@@ -349,7 +350,10 @@ nmaplot <- function(x,
   if (!is.null(label_wrap)) name <- wrap_labels(name, label_wrap)
   nodes$name <- name
   nodes$nline <- if (isTRUE(show_n)) {
-    if (net$has.n) paste0("n = ", format_int(nodes$n)) else paste0("k = ", nodes$k)
+    if (net$has.n) {
+      share <- round(100 * nodes$n / sum(nodes$n, na.rm = TRUE))
+      paste0("n = ", format_int(nodes$n), "\n(", share, "% of total)")
+    } else paste0("k = ", nodes$k)
   } else ""
   nodes$label <- ifelse(nzchar(nodes$nline), paste0(nodes$name, "\n", nodes$nline),
                         nodes$name)
@@ -370,11 +374,13 @@ nmaplot <- function(x,
   # a node sitting in the middle of the network (star layout) has spokes all
   # around it: write its label inside the disc when the disc is wide enough
   upi0 <- 2.9 / max(width, 1)
-  chars <- vapply(strsplit(nodes$name, "\n", fixed = TRUE),
+  chars <- vapply(strsplit(nodes$label, "\n", fixed = TRUE),
                   function(v) max(nchar(v)), numeric(1))
   half_w <- chars * label_size * 0.55 / 72 * upi0 / 2
   centre_node <- sqrt(dx^2 + dy^2) < 0.15 & nodes$degree >= 3
-  nodes$inside <- centre_node & nodes$size >= half_w * 1.05
+  nodes$tscale <- pmin(1, nodes$size * 0.92 / pmax(half_w, 1e-9))
+  nodes$inside <- centre_node & nodes$tscale >= 0.65
+  nodes$tscale[!nodes$inside] <- 1
   nodes$lx[nodes$inside] <- nodes$x[nodes$inside]
   nodes$ly[nodes$inside] <- nodes$y[nodes$inside]
   nodes$hjust[nodes$inside] <- 0.5
@@ -522,7 +528,7 @@ nmaplot <- function(x,
           data = pl,
           aes(x = .data$px, y = .data$py, label = .data$txt,
               hjust = .data$ph, vjust = .data$pv),
-          size = label_size * 0.7 / ggplot2::.pt, colour = label_color,
+          size = label_size * 0.8 / ggplot2::.pt, colour = label_color,
           family = font_family
         )
       }
@@ -586,33 +592,33 @@ nmaplot <- function(x,
   }
 
   # treatment names (bold) with the sample size line underneath (lighter)
-  line_h <- label_size * 1.15 / 72 * upi
+  line_h <- label_size * 1.15 / 72 * upi * nodes$tscale
   two <- nzchar(nodes$nline)
-  nl <- vapply(strsplit(nodes$name, "
-", fixed = TRUE), length, integer(1))
-  blk <- (nl + as.integer(two)) * line_h            # text block height
+  nl <- vapply(strsplit(nodes$name, "\n", fixed = TRUE), length, integer(1))
+  nn <- ifelse(two, vapply(strsplit(nodes$nline, "\n", fixed = TRUE), length, integer(1)), 0L)
+  blk <- (nl + nn) * line_h                          # text block height
   yb <- nodes$ly - nodes$vjust * blk                 # block bottom
-  nodes$n_y <- yb + line_h / 2
-  nodes$name_y <- yb + ifelse(two, line_h, 0) + nl * line_h / 2
+  nodes$n_y <- yb + nn * line_h / 2
+  nodes$name_y <- yb + nn * line_h + nl * line_h / 2
   nodes$name_v <- 0.5
+  nodes$tsize <- label_size * nodes$tscale / ggplot2::.pt
   nodes$name_col <- ifelse(nodes$inside, contrast_text(nodes$fill), label_color)
-  nodes$n_col <- ifelse(nodes$inside, contrast_text(nodes$fill),
-                        soften(label_color, 0.25))
+  nodes$n_col <- ifelse(nodes$inside, contrast_text(nodes$fill), label_color)
   p <- p + geom_text(
     data = nodes,
     aes(x = .data$lx, y = .data$name_y, label = .data$name, hjust = .data$hjust,
-        vjust = .data$name_v, colour = .data$name_col),
-    size = label_size / ggplot2::.pt, fontface = "bold",
-    family = font_family, lineheight = 0.9
+        vjust = .data$name_v, colour = .data$name_col, size = .data$tsize),
+    fontface = "bold", family = font_family, lineheight = 0.9
   )
   if (any(two)) {
     p <- p + geom_text(
       data = nodes[two, ],
       aes(x = .data$lx, y = .data$n_y, label = .data$nline, hjust = .data$hjust,
-          colour = .data$n_col),
-      vjust = 0.5, size = label_size / ggplot2::.pt, family = font_family
+          colour = .data$n_col, size = .data$tsize),
+      vjust = 0.5, family = font_family, lineheight = 0.9
     )
   }
+  p <- p + ggplot2::scale_size_identity()
 
   # legend panel
   if (!is.null(leg)) {

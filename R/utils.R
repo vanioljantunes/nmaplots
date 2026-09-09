@@ -235,11 +235,11 @@ label_direction <- function(nodes, edges, fallback) {
 # Rectangular plotting window fitted to the nodes (with rings) and the
 # estimated extent of their labels. `upi` = layout units per inch.
 plot_window <- function(nodes, label_size, upi, margin) {
-  chars <- vapply(strsplit(nodes$label, "
-", fixed = TRUE),
+  chars <- vapply(strsplit(nodes$label, "\n", fixed = TRUE),
                   function(v) max(nchar(v)), numeric(1))
   tw <- chars * label_size * 0.55 / 72 * upi
-  th <- 2.3 * label_size / 72 * upi
+  nlines <- vapply(strsplit(nodes$label, "\n", fixed = TRUE), length, numeric(1))
+  th <- (nlines + 0.3) * 1.15 * label_size / 72 * upi
   left <- pmin(nodes$x - nodes$r_out, nodes$lx - tw * nodes$hjust)
   right <- pmax(nodes$x + nodes$r_out, nodes$lx + tw * (1 - nodes$hjust))
   bottom <- pmin(nodes$y - nodes$r_out, nodes$ly - th * nodes$vjust)
@@ -264,11 +264,11 @@ nmaplot_theme <- function(grid, grid_color, background, title_size,
       plot.title = element_text(size = title_size, face = "bold", hjust = hj,
                                 colour = title_color, family = font_family,
                                 margin = margin(b = 3)),
-      plot.subtitle = element_text(size = title_size * 0.62, hjust = hj,
-                                   colour = soften(title_color, 0.4),
+      plot.subtitle = element_text(size = title_size * 0.68, hjust = hj,
+                                   colour = title_color,
                                    family = font_family, margin = margin(b = 6)),
-      plot.caption = element_text(size = title_size * 0.5, hjust = 1,
-                                  face = "italic", colour = soften(title_color, 0.35),
+      plot.caption = element_text(size = title_size * 0.55, hjust = 1,
+                                  face = "italic", colour = title_color,
                                   family = font_family, margin = margin(t = 4)),
       plot.margin = margin(14, 14, 10, 14),
       legend.position = "none"

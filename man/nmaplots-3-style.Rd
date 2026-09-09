@@ -48,8 +48,9 @@ per study; \code{min_studies} hides comparisons with fewer studies.
 
 \section{Labels}{
 
-Treatment names are bold with \code{n = ...} in a lighter line underneath
-(\code{show_n = FALSE} drops it). Names longer than \code{label_wrap} characters
+Treatment names are bold with \verb{n = ... (x\% of total)} underneath, the
+share being that treatment's participants over all arms (\code{show_n = FALSE}
+drops the line). Names longer than \code{label_wrap} characters
 are wrapped. \code{labels} supplies display names (a named vector is safest).
 Each label is placed in the largest empty angle around its node so it
 does not cross an edge; \code{label_offset} moves it further out.

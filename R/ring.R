@@ -75,90 +75,99 @@ resolve_ring_colors <- function(ring_colors, groups) {
   stats::setNames(ring_colors[seq_along(groups)], groups)
 }
 
-# Legend panel drawn in data space under the network: framed sections for
-# node size, edge width and (if present) ring groups.
+# Legend panel drawn in data space under the network: one framed box with
+# centred sections for node size, the circled study count and (if present)
+# the ring groups.
 build_legend <- function(nodes, edges, rings, ring_groups, size_label,
                          edge_width_range, ring_title, win, has_n, rc) {
   n_sec <- 2 + !is.null(rings)
   lim <- win$hw
   gap <- 0.04 * lim
   top <- win$ylim[1] - gap
-  hgt <- 0.42 * lim
+  hgt <- 0.34 * lim
   bottom <- top - hgt
   wsec <- diff(win$xlim) / n_sec
   xs <- win$xlim[1] + (seq_len(n_sec) - 1) * wsec
+  cxs <- xs + wsec / 2
   boxes <- data.frame(xmin = win$xlim[1], xmax = win$xlim[2], ymin = bottom, ymax = top)
   dividers <- data.frame(x = xs[-1], xend = xs[-1], y = bottom, yend = top)
-  pad <- 0.05 * lim
-  ty <- top - pad - 0.02 * lim
+  pad <- 0.04 * lim
+  ty <- top - pad - 0.025 * lim            # title line
+  cy <- (bottom + ty - 0.04 * lim) / 2     # middle of the item area
   text <- list()
   circles <- list()
   lines <- list()
   squares <- NULL
 
-  # section 1: node size
+  # section 1: node size (two discs with their n, centred as a group)
   txt1 <- if (is.null(size_label)) "Node size" else size_label
-  text[[1]] <- data.frame(x = xs[1] + pad, y = ty, label = txt1,
-                          face = "bold", hjust = 0, stringsAsFactors = FALSE)
-  # legend discs scaled to fit the box: largest disc at most 9 % of the width
-  sc <- min(1, 0.09 * wsec / max(nodes$size))
+  text[[1]] <- data.frame(x = cxs[1], y = ty, label = txt1,
+                          face = "bold", hjust = 0.5, stringsAsFactors = FALSE)
+  sc <- min(1, 0.075 * wsec / max(nodes$size))
   rmax <- max(nodes$size) * sc
   rmin <- min(nodes$size) * sc
-  cy <- (bottom + ty - pad) / 2
-  cx1 <- xs[1] + pad + rmax
+  pre <- if (isTRUE(has_n)) "n = " else "k = "
+  lab_big <- if (!is.null(nodes$size_driver)) paste0(pre, format_int(max(nodes$size_driver))) else "largest"
+  lab_small <- if (!is.null(nodes$size_driver)) paste0(pre, format_int(min(nodes$size_driver))) else "smallest"
+  tw <- 0.22 * wsec                        # room for the text after each disc
+  grp <- 2 * rmax + 0.02 * lim + tw + (if (rmin < rmax) 0.06 * wsec + 2 * rmin + 0.02 * lim + tw else 0)
+  x0 <- cxs[1] - grp / 2
+  cx1 <- x0 + rmax
   c1 <- circle_poly(cx1, cy, rmax)
   c1$id <- "L1"
   c1$fill <- "#C9CDD2"
   circles[[1]] <- c1
-  pre <- if (isTRUE(has_n)) "n = " else "k = "
-  lab_big <- if (!is.null(nodes$size_driver)) paste0(pre, format_int(max(nodes$size_driver))) else "largest"
-  lab_small <- if (!is.null(nodes$size_driver)) paste0(pre, format_int(min(nodes$size_driver))) else "smallest"
-  text[[2]] <- data.frame(x = cx1 + rmax + 0.035 * lim, y = cy,
+  text[[2]] <- data.frame(x = cx1 + rmax + 0.02 * lim, y = cy,
                           label = paste0(lab_big, "\n(larger node)"),
                           face = "plain", hjust = 0, stringsAsFactors = FALSE)
   if (rmin < rmax) {
-    cx2 <- xs[1] + 0.58 * wsec + rmin
+    cx2 <- cx1 + rmax + 0.02 * lim + tw + 0.06 * wsec + rmin
     c2 <- circle_poly(cx2, cy, rmin)
     c2$id <- "L2"
     c2$fill <- "#C9CDD2"
     circles[[2]] <- c2
-    text[[3]] <- data.frame(x = cx2 + rmin + 0.035 * lim, y = cy,
+    text[[3]] <- data.frame(x = cx2 + rmin + 0.02 * lim, y = cy,
                             label = paste0(lab_small, "\n(smaller node)"),
                             face = "plain", hjust = 0, stringsAsFactors = FALSE)
   }
 
-  # section 2: one line with the circled study count
-  text[[4]] <- data.frame(x = xs[2] + pad, y = ty,
+  # section 2: one line with the circled study count, centred as a group
+  text[[4]] <- data.frame(x = cxs[2], y = ty,
                           label = "Number in the circle = direct studies",
-                          face = "bold", hjust = 0, stringsAsFactors = FALSE)
-  ly <- cy
-  lx0 <- xs[2] + pad
-  lx1 <- xs[2] + pad + 0.38 * wsec
-  lines[[1]] <- data.frame(x = lx0, xend = lx1, y = ly, yend = ly,
+                          face = "bold", hjust = 0.5, stringsAsFactors = FALSE)
+  llen <- 0.34 * wsec
+  grp2 <- llen + 0.03 * lim + 0.36 * wsec
+  lx0 <- cxs[2] - grp2 / 2
+  lx1 <- lx0 + llen
+  lines[[1]] <- data.frame(x = lx0, xend = lx1, y = cy, yend = cy,
                            width = if (nrow(edges)) mean(range(edges$width)) else 1)
   kex <- if (nrow(edges)) stats::median(edges$studies) else 1
-  dot <- circle_poly((lx0 + lx1) / 2, ly, rc, n = 48)
+  dot <- circle_poly((lx0 + lx1) / 2, cy, rc, n = 48)
   dot$id <- "L"
-  dot_text <- data.frame(x = (lx0 + lx1) / 2, y = ly, label = round(kex),
+  dot_text <- data.frame(x = (lx0 + lx1) / 2, y = cy, label = round(kex),
                          stringsAsFactors = FALSE)
-  text[[5]] <- data.frame(x = lx1 + 0.03 * lim, y = ly,
-                          label = "studies comparing\nthe two treatments\n(line width follows it)",
+  text[[5]] <- data.frame(x = lx1 + 0.03 * lim, y = cy,
+                          label = "studies comparing\nthe two treatments",
                           face = "plain", hjust = 0, stringsAsFactors = FALSE)
 
-  # section 3: ring groups
+  # section 3: ring groups, stacked and centred as a block
   if (!is.null(rings)) {
-    text[[6]] <- data.frame(x = xs[3] + pad, y = ty, label = ring_title,
-                            face = "bold", hjust = 0, stringsAsFactors = FALSE)
+    text[[6]] <- data.frame(x = cxs[3], y = ty, label = ring_title,
+                            face = "bold", hjust = 0.5, stringsAsFactors = FALSE)
     cols <- unique(rings[, c("group", "fill")])
     cols <- cols[match(ring_groups, cols$group), , drop = FALSE]
     cols <- cols[!is.na(cols$group), , drop = FALSE]
-    step <- min(0.11 * lim, (ty - 0.09 * lim - bottom - pad) / max(nrow(cols) - 1, 1))
-    ys <- ty - 0.09 * lim - (seq_len(nrow(cols)) - 1) * step
-    sq <- 0.03 * lim
-    squares <- data.frame(xmin = xs[3] + pad, xmax = xs[3] + pad + 2 * sq,
+    k <- nrow(cols)
+    step <- min(0.10 * lim, (ty - 0.05 * lim - bottom - pad) / max(k, 1))
+    ys <- cy + (k - 1) * step / 2 - (seq_len(k) - 1) * step
+    sq <- 0.028 * lim
+    wtxt <- max(nchar(cols$group)) * 0.55 * 11 / 72 * (2 * lim) / 9
+    blk <- 2 * sq + 0.03 * lim + wtxt
+    bx0 <- cxs[3] - blk / 2
+    squares <- data.frame(xmin = bx0, xmax = bx0 + 2 * sq,
                           ymin = ys - sq, ymax = ys + sq, fill = cols$fill,
                           stringsAsFactors = FALSE)
-    text[[7]] <- data.frame(x = xs[3] + pad + 2 * sq + 0.03 * lim, y = ys,
+    text[[7]] <- data.frame(x = bx0 + 2 * sq + 0.03 * lim, y = ys,
                             label = cols$group, face = "plain", hjust = 0,
                             stringsAsFactors = FALSE)
   }

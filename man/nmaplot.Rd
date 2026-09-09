@@ -21,7 +21,7 @@ nmaplot(
   outcome = NULL,
   font_family = "serif",
   label_wrap = 18,
-  label_size = 12,
+  label_size = 14,
   label_color = "#1F2A44",
   label_offset = 0.08,
   node_size = c("n", "studies", "equal"),
@@ -41,7 +41,7 @@ nmaplot(
   max_lines = 6,
   min_studies = 1,
   edge_labels = TRUE,
-  edge_label_size = 10,
+  edge_label_size = 11,
   edge_label_color = "black",
   edge_label_fill = "white",
   edge_label_offset = 0.05,
@@ -51,7 +51,7 @@ nmaplot(
   title = "Network of Interventions",
   subtitle = NULL,
   caption = NULL,
-  title_size = 20,
+  title_size = 22,
   title_color = "#1F2A44",
   title_align = c("center", "left"),
   circle_guide = TRUE,
@@ -60,7 +60,7 @@ nmaplot(
   grid_color = "grey88",
   background = "white",
   legend = TRUE,
-  legend_size = 9,
+  legend_size = 11,
   margin = 0.06,
   file = NULL,
   width = 9,
@@ -93,7 +93,8 @@ filled with \code{reference_fill}. Defaults to the reference group of the
 \item{labels}{Optional character vector of display names for the
 treatments, in the order of \code{x$trts} (or a named vector).}
 
-\item{show_n}{Logical. Print the sample size (\verb{n = 1,234}) under each
+\item{show_n}{Logical. Print the sample size and its share of all
+randomised participants (\verb{n = 1,234 (18\% of total)}) under each
 treatment name. When the \code{netmeta} object has no sample sizes the number
 of studies is printed instead (\code{k = 4}).}
 
