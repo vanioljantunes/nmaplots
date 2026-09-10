@@ -36,7 +36,7 @@ nmaplot(
   highlight = NULL,
   highlight_color = "#E4572E",
   edge_width = c("studies", "equal"),
-  edge_width_range = c(0.5, 3),
+  edge_width_range = c(0.3, 2),
   edge_color = "black",
   edge_alpha = 1,
   edge_style = c("single", "multi"),

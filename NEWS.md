@@ -1,3 +1,7 @@
+# nmaplots 0.2.0.9000
+
+* Thinner default edges (`edge_width_range = c(0.3, 2)` mm).
+
 # nmaplots 0.2.0
 
 ## Data
