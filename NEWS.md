@@ -1,6 +1,13 @@
 # nmaplots 0.2.0.9000
 
 * Thinner default edges (`edge_width_range = c(0.3, 2)` mm).
+* Node labels put the share on the same row as the count, `n = 374 (23%)`.
+* Legend: every section header sits on a shaded band, with a larger bold name
+  and the descriptor tucked closer under it. The node-size section now shows a
+  single node labelled the way the plot labels them, with a note that the
+  percentage is the share of all patients.
+* Smaller circled study counts, drawn in `edge_font_family` (`"sans"` by
+  default) so the digits stay compact.
 
 # nmaplots 0.2.0
 

@@ -36,7 +36,7 @@ test_that("labels carry sample sizes when available", {
   expect_equal(p$nmaplot$nodes$fill[p$nmaplot$nodes$trt == "A"], "#8A939B")
   p2 <- nmaplot(net, show_n = FALSE)
   expect_equal(p2$nmaplot$nodes$label, net$trts)
-  expect_true(all(grepl("\nn = .*% of total", p$nmaplot$nodes$label)))
+  expect_true(all(grepl("\nn = .*[(][0-9]+%[)]", p$nmaplot$nodes$label)))
   net2 <- make_net_no_n()
   p3 <- nmaplot(net2, label_wrap = NULL)
   expect_true(all(grepl("k = ", p3$nmaplot$nodes$label)))

@@ -5,7 +5,7 @@ Publication-quality network plots for `netmeta` objects, in one function.
 `nmaplot()` takes the object returned by `netmeta::netmeta()`, exactly like
 `netmeta::netgraph()`, and draws the evidence network with ggplot2: node
 area by sample size, black edges with the number of studies in a circle,
-treatment name plus `n = 1,234 (18% of total)` at every node, an optional outer ring per
+treatment name plus `n = 1,234 (18%)` at every node, an optional outer ring per
 node showing a subgroup composition (study design, risk of bias, region,
 anything), and a framed legend panel.
 

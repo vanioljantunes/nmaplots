@@ -27,8 +27,7 @@
 #' @param labels Optional character vector of display names for the
 #'   treatments, in the order of `x$trts` (or a named vector).
 #' @param show_n Logical. Print the sample size and its share of all
-#'   randomised participants (`n = 1,234 (18% of total)`) under each
-#'   treatment name. When the `netmeta` object has no sample sizes the number
+#'   randomised participants (`n = 1,234 (18%)`) under each treatment name. When the `netmeta` object has no sample sizes the number
 #'   of studies is printed instead (`k = 4`).
 #' @param ring Optional subgroup composition drawn as a ring around each node.
 #'   Either a long data frame with three columns (treatment, group, value) or
@@ -54,6 +53,8 @@
 #'   of studies, treatments and patients in the network.
 #' @param font_family Font family for all text. `"serif"` reproduces the
 #'   reference look; use `"sans"` for Helvetica-like output.
+#' @param edge_font_family Font family for the circled study counts only.
+#'   `"sans"` (Arial-like) keeps the digits compact inside their circle.
 #' @param label_wrap Integer. Wrap treatment names longer than this many
 #'   characters. `NULL` disables wrapping.
 #' @param label_size Font size (points) of the treatment names and of the
@@ -162,6 +163,7 @@ nmaplot <- function(x,
                     outcome = NULL,
                     summary_line = TRUE,
                     font_family = "serif",
+                    edge_font_family = "sans",
                     label_wrap = 18,
                     label_size = 14,
                     label_color = "#1F2A44",
@@ -184,7 +186,7 @@ nmaplot <- function(x,
                     max_lines = 6,
                     min_studies = 1,
                     edge_labels = TRUE,
-                    edge_label_size = 11,
+                    edge_label_size = 9,
                     edge_label_color = "black",
                     edge_label_fill = "white",
                     edge_label_offset = 0.05,
@@ -364,7 +366,7 @@ nmaplot <- function(x,
   nodes$nline <- if (isTRUE(show_n)) {
     if (net$has.n) {
       share <- round(100 * nodes$n / sum(nodes$n, na.rm = TRUE))
-      paste0("n = ", format_int(nodes$n), "\n(", share, "% of total)")
+      paste0("n = ", format_int(nodes$n), " (", share, "%)")
     } else paste0("k = ", nodes$k)
   } else ""
   nodes$label <- ifelse(nzchar(nodes$nline), paste0(nodes$name, "\n", nodes$nline),
@@ -469,7 +471,7 @@ nmaplot <- function(x,
   if (isTRUE(legend)) {
     leg <- build_legend(nodes, edges, rings, ring_groups, size_label,
                         edge_width_range, ring_title, win, has_n = net$has.n,
-                        rc = edge_label_size * 1.05 / 72 * upi,
+                        rc = edge_label_size * 0.95 / 72 * upi,
                         ring_name = ring_name, reference_fill = reference_fill)
     ylo <- leg$ylo
   }
@@ -540,7 +542,10 @@ nmaplot <- function(x,
           nb <- c(edges$treat2[edges$treat1 == t], edges$treat1[edges$treat2 == t])
           k <- match(nb, nodes$trt)
           ea <- atan2(nodes$y[k] - nodes$y[j], nodes$x[k] - nodes$x[j])
-          pct_angle(pl$a0[i], pl$a1[i], c(ea, ang[j]))
+          # keep the percentage away from the edges and from the whole
+          # width of the label block, not just its anchor direction
+          pct_angle(pl$a0[i], pl$a1[i],
+                    c(ea, ang[j] + c(-0.5, -0.25, 0, 0.25, 0.5)))
         }, numeric(1))
         rr <- pl$r1 + 0.02
         pl$px <- pl$x0 + rr * cos(am)
@@ -596,7 +601,7 @@ nmaplot <- function(x,
       )
     } else {
       # white disc with a black border, number inside, sized to the font
-      rc <- edge_label_size * 1.05 / 72 * upi * (1 + 0.06 * (nchar(edges$studies) - 1))
+      rc <- edge_label_size * 0.95 / 72 * upi * (1 + 0.06 * (nchar(edges$studies) - 1))
       edges <- spread_edge_labels(edges, rc)
       dots_df <- do.call(rbind, lapply(seq_len(nrow(edges)), function(i) {
         d <- circle_poly(edges$mx[i], edges$my[i], rc[i], n = 48)
@@ -611,7 +616,7 @@ nmaplot <- function(x,
         geom_text(data = edges,
                   aes(x = .data$mx, y = .data$my, label = .data$studies),
                   size = edge_label_size / ggplot2::.pt, colour = edge_label_color,
-                  fontface = "bold", family = font_family)
+                  fontface = "bold", family = edge_font_family)
     }
   }
 
@@ -672,6 +677,10 @@ nmaplot <- function(x,
                 aes(xmin = .data$xmin, xmax = .data$xmax, ymin = .data$ymin,
                     ymax = .data$ymax),
                 fill = "white", colour = "#9AA0A6", linewidth = 0.5) +
+      geom_rect(data = leg$headers,
+                aes(xmin = .data$xmin, xmax = .data$xmax, ymin = .data$ymin,
+                    ymax = .data$ymax),
+                fill = "#EDEFF2", colour = NA) +
       geom_segment(data = leg$dividers,
                    aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend),
                    colour = "#C5C9CE", linewidth = 0.4) +
@@ -688,7 +697,7 @@ nmaplot <- function(x,
       geom_text(data = leg$dot_text,
                 aes(x = .data$x, y = .data$y, label = .data$label),
                 size = edge_label_size / ggplot2::.pt, colour = edge_label_color,
-                fontface = "bold", family = font_family)
+                fontface = "bold", family = edge_font_family)
     if (!is.null(leg$ringex) && nrow(leg$ringex)) {
       p <- p + geom_polygon(data = leg$ringex,
                             aes(x = .data$x, y = .data$y, group = .data$id, fill = .data$fill),

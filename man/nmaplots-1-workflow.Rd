@@ -35,7 +35,7 @@ Defaults: treatments on a polygon (\code{layout = "multi"}), node area
 proportional to the sample size, reference treatment in grey and the
 others in muted red, black edges whose width follows the number of direct
 studies with that number in a white circle on the edge, bold treatment name
-with \verb{n = ... (x\% of total)} underneath, centred title "Network of Interventions" with
+with \verb{n = ... (x\%)} underneath, centred title "Network of Interventions" with
 the outcome as subtitle, and a boxed legend under the network.
 
 The result is a \code{ggplot}; \code{+} works as usual to add layers or change the

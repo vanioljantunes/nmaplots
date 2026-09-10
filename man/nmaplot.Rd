@@ -21,6 +21,7 @@ nmaplot(
   outcome = NULL,
   summary_line = TRUE,
   font_family = "serif",
+  edge_font_family = "sans",
   label_wrap = 18,
   label_size = 14,
   label_color = "#1F2A44",
@@ -43,7 +44,7 @@ nmaplot(
   max_lines = 6,
   min_studies = 1,
   edge_labels = TRUE,
-  edge_label_size = 11,
+  edge_label_size = 9,
   edge_label_color = "black",
   edge_label_fill = "white",
   edge_label_offset = 0.05,
@@ -96,8 +97,7 @@ filled with \code{reference_fill}. Defaults to the reference group of the
 treatments, in the order of \code{x$trts} (or a named vector).}
 
 \item{show_n}{Logical. Print the sample size and its share of all
-randomised participants (\verb{n = 1,234 (18\% of total)}) under each
-treatment name. When the \code{netmeta} object has no sample sizes the number
+randomised participants (\verb{n = 1,234 (18\%)}) under each treatment name. When the \code{netmeta} object has no sample sizes the number
 of studies is printed instead (\code{k = 4}).}
 
 \item{ring}{Optional subgroup composition drawn as a ring around each node.
@@ -133,6 +133,9 @@ of studies, treatments and patients in the network.}
 
 \item{font_family}{Font family for all text. \code{"serif"} reproduces the
 reference look; use \code{"sans"} for Helvetica-like output.}
+
+\item{edge_font_family}{Font family for the circled study counts only.
+\code{"sans"} (Arial-like) keeps the digits compact inside their circle.}
 
 \item{label_wrap}{Integer. Wrap treatment names longer than this many
 characters. \code{NULL} disables wrapping.}

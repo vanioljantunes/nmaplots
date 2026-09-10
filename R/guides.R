@@ -29,7 +29,7 @@
 #' proportional to the sample size, reference treatment in grey and the
 #' others in muted red, black edges whose width follows the number of direct
 #' studies with that number in a white circle on the edge, bold treatment name
-#' with `n = ... (x% of total)` underneath, centred title "Network of Interventions" with
+#' with `n = ... (x%)` underneath, centred title "Network of Interventions" with
 #' the outcome as subtitle, and a boxed legend under the network.
 #'
 #' The result is a `ggplot`; `+` works as usual to add layers or change the
@@ -142,7 +142,7 @@ NULL
 #' `multiarm = TRUE` shades the polygon of each multi-arm trial.
 #'
 #' @section Labels:
-#' Treatment names are bold with `n = ... (x% of total)` underneath, the
+#' Treatment names are bold with `n = ... (x%)` underneath, the
 #' share being that treatment's participants over all arms (`show_n = FALSE`
 #' drops the line). Names longer than `label_wrap` characters
 #' are wrapped. `labels` supplies display names (a named vector is safest).

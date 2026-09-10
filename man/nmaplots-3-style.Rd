@@ -50,7 +50,7 @@ per study; \code{min_studies} hides comparisons with fewer studies.
 
 \section{Labels}{
 
-Treatment names are bold with \verb{n = ... (x\% of total)} underneath, the
+Treatment names are bold with \verb{n = ... (x\%)} underneath, the
 share being that treatment's participants over all arms (\code{show_n = FALSE}
 drops the line). Names longer than \code{label_wrap} characters
 are wrapped. \code{labels} supplies display names (a named vector is safest).

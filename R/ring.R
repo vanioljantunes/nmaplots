@@ -77,7 +77,8 @@ resolve_ring_colors <- function(ring_colors, groups) {
 
 # Legend panel drawn in data space under the network: one framed box with
 # centred sections (node size, circled study count, centre node for the star
-# layout, ring groups). Each section has a bold name and a lighter descriptor.
+# layout, ring groups). Every section has a shaded header carrying a bold name
+# and a lighter descriptor.
 build_legend <- function(nodes, edges, rings, ring_groups, size_label,
                          edge_width_range, ring_title, win, has_n, rc,
                          ring_name = NULL, reference_fill = "#8A939B") {
@@ -94,9 +95,12 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
   boxes <- data.frame(xmin = win$xlim[1], xmax = win$xlim[2], ymin = bottom, ymax = top)
   dividers <- data.frame(x = xs[-1], xend = xs[-1], y = bottom, yend = top)
   pad <- 0.04 * lim
-  ty <- top - pad - 0.03 * lim               # section name
-  ty2 <- ty - 0.075 * lim                    # descriptor
-  cy <- (bottom + ty2 - 0.05 * lim) / 2      # middle of the item area
+  ty <- top - 0.055 * lim                    # section name
+  ty2 <- ty - 0.05 * lim                     # descriptor, close under it
+  hb <- ty2 - 0.03 * lim                     # bottom of the shaded header band
+  headers <- data.frame(xmin = xs, xmax = xs + wsec, ymin = hb, ymax = top,
+                        stringsAsFactors = FALSE)
+  cy <- (bottom + hb) / 2                    # middle of the item area
   text <- list()
   circles <- list()
   lines <- list()
@@ -105,7 +109,7 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
 
   hdr <- function(i, name, what) {
     rbind(data.frame(x = cxs[i], y = ty, label = name, face = "bold", hjust = 0.5,
-                     sz = 1.25, stringsAsFactors = FALSE),
+                     sz = 1.45, stringsAsFactors = FALSE),
           data.frame(x = cxs[i], y = ty2, label = what, face = "plain", hjust = 0.5,
                      sz = 0.95, stringsAsFactors = FALSE))
   }
@@ -114,38 +118,33 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
                sz = 1, stringsAsFactors = FALSE)
   }
 
-  # section 1: node size, two discs stacked
+  # section 1: one node, labelled the way the plot labels them
   what1 <- if (is.null(size_label)) "" else
     sub("^Node size = (number of )?", "", size_label)
   what1 <- paste0(toupper(substr(what1, 1, 1)), substr(what1, 2, nchar(what1)))
   text[[1]] <- hdr(1, "Node size", what1)
-  sc <- min(1, 0.07 * wsec / max(nodes$size))
-  rmax <- max(nodes$size) * sc
-  rmin <- min(nodes$size) * sc
+  by_patients <- !is.null(size_label) && grepl("participants", size_label, fixed = TRUE)
+  sc <- min(1, 0.085 * wsec / max(nodes$size))
+  rex1 <- max(nodes$size) * sc
   pre <- if (isTRUE(has_n)) "n = " else "k = "
-  lab_big <- if (!is.null(nodes$size_driver)) paste0(pre, format_int(max(nodes$size_driver))) else "largest"
-  lab_small <- if (!is.null(nodes$size_driver)) paste0(pre, format_int(min(nodes$size_driver))) else "smallest"
-  tw <- 0.30 * wsec
-  grp <- 2 * rmax + 0.03 * lim + tw
-  x0 <- cxs[1] - grp / 2
-  cx1 <- x0 + rmax
-  y1 <- cy + rmin + 0.03 * lim
-  y2 <- cy - rmax - 0.03 * lim
-  c1 <- circle_poly(cx1, y1, rmax)
+  big <- if (!is.null(nodes$size_driver)) max(nodes$size_driver) else NA
+  lab_big <- if (!is.na(big)) {
+    if (by_patients)
+      paste0(pre, format_int(big), " (",
+             round(100 * big / sum(nodes$size_driver, na.rm = TRUE)), "%)")
+    else paste0(pre, format_int(big))
+  } else "largest node"
+  note <- if (by_patients) "% of all patients" else "largest node in the network"
+  grp <- 2 * rex1 + 0.03 * lim + 0.44 * wsec
+  cx1 <- cxs[1] - grp / 2 + rex1
+  c1 <- circle_poly(cx1, cy, rex1)
   c1$id <- "L1"
   c1$fill <- "#C9CDD2"
   circles[[1]] <- c1
-  text[[2]] <- item(cx1 + rmax + 0.03 * lim, y1, paste0(lab_big, " (larger)"))
-  if (rmin < rmax) {
-    c2 <- circle_poly(cx1, y2, rmin)
-    c2$id <- "L2"
-    c2$fill <- "#C9CDD2"
-    circles[[2]] <- c2
-    text[[3]] <- item(cx1 + rmax + 0.03 * lim, y2, paste0(lab_small, " (smaller)"))
-  }
+  text[[2]] <- item(cx1 + rex1 + 0.03 * lim, cy, paste0(lab_big, "\n", note))
 
   # section 2: one line with the circled study count
-  text[[4]] <- hdr(2, "Circled number", "Direct studies")
+  text[[3]] <- hdr(2, "Circled number", "Direct studies")
   llen <- 0.30 * wsec
   grp2 <- llen + 0.03 * lim + 0.38 * wsec
   lx0 <- cxs[2] - grp2 / 2
@@ -157,12 +156,13 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
   dot$id <- "L"
   dot_text <- data.frame(x = (lx0 + lx1) / 2, y = cy, label = round(kex),
                          stringsAsFactors = FALSE)
-  text[[5]] <- item(lx1 + 0.03 * lim, cy, paste0("studies comparing", "\n", "the two treatments"))
+  text[[4]] <- item(lx1 + 0.03 * lim, cy,
+                    paste0("studies comparing", "\n", "the two treatments"))
 
   # section 3 (star layout): the centre node
   isec <- 3
   if (!is.null(centre)) {
-    text[[6]] <- hdr(isec, "Centre node", "Reference")
+    text[[5]] <- hdr(isec, "Centre node", "Reference")
     rcen <- min(centre$size, 0.07 * wsec)
     ctxt <- if (nzchar(centre$nline)) paste0(centre$name, "\n", centre$nline) else centre$name
     grp3 <- 2 * rcen + 0.03 * lim + 0.45 * wsec
@@ -171,7 +171,7 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
     c3$id <- "L3"
     c3$fill <- centre$fill
     circles[[3]] <- c3
-    text[[7]] <- item(cx3 + rcen + 0.03 * lim, cy, ctxt)
+    text[[6]] <- item(cx3 + rcen + 0.03 * lim, cy, ctxt)
     isec <- 4
   }
 
@@ -179,12 +179,12 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
   if (!is.null(rings)) {
     what4 <- if (!is.null(ring_name)) ring_name else
       sub("^Outer ring = ", "", ring_title)
-    text[[8]] <- hdr(isec, "Outer ring", what4)
+    text[[7]] <- hdr(isec, "Outer ring", what4)
     cols <- unique(rings[, c("group", "fill")])
     cols <- cols[match(ring_groups, cols$group), , drop = FALSE]
     cols <- cols[!is.na(cols$group), , drop = FALSE]
     k <- nrow(cols)
-    step <- min(0.10 * lim, (ty2 - 0.06 * lim - bottom - pad) / max(k, 1))
+    step <- min(0.10 * lim, (hb - bottom - pad) / max(k, 1))
     ys <- cy + (k - 1) * step / 2 - (seq_len(k) - 1) * step
     sq <- 0.028 * lim
     rex <- 0.06 * wsec
@@ -206,13 +206,13 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
     squares <- data.frame(xmin = sx0, xmax = sx0 + 2 * sq,
                           ymin = ys - sq, ymax = ys + sq, fill = cols$fill,
                           stringsAsFactors = FALSE)
-    text[[9]] <- data.frame(x = sx0 + 2 * sq + 0.03 * lim, y = ys,
+    text[[8]] <- data.frame(x = sx0 + 2 * sq + 0.03 * lim, y = ys,
                             label = cols$group, face = "plain", hjust = 0, sz = 1,
                             stringsAsFactors = FALSE)
   }
 
-  list(boxes = boxes, dividers = dividers, circles = do.call(rbind, circles),
-       lines = do.call(rbind, lines), dot = dot, dot_text = dot_text,
-       squares = squares, ringex = ringex, text = do.call(rbind, text),
-       ylo = bottom - gap, n_sec = n_sec)
+  list(boxes = boxes, headers = headers, dividers = dividers,
+       circles = do.call(rbind, circles), lines = do.call(rbind, lines),
+       dot = dot, dot_text = dot_text, squares = squares, ringex = ringex,
+       text = do.call(rbind, text), ylo = bottom - gap, n_sec = n_sec)
 }
