@@ -6,41 +6,39 @@ output: html_notebook
 ```{r packages}
 library(netmeta)
 library(nmaplots)
-knitr::opts_chunk$set(fig.width = 9, fig.height = 9.5, dpi = 150)
+knitr::opts_chunk$set(fig.width = 10, fig.height = 10.5, dpi = 150)
 ```
 
 ```{r data}
-data(Franchini2012)
+data(mash)
+d <- mash$fib_improvement_alldoses
 ```
 
 ```{r network}
-p1 <- pairwise(list(Treatment1, Treatment2, Treatment3),
-               n = list(n1, n2, n3),
-               mean = list(y1, y2, y3),
-               sd = list(sd1, sd2, sd3),
-               data = Franchini2012, studlab = Study)
+p <- pairwise(treat = treatment, event = responders, n = sampleSize,
+              studlab = study, data = d, sm = "RR")
 
-net1 <- netmeta(p1, sm = "MD", reference.group = "plac")
+net <- netmeta(p, reference.group = "Placebo")
 
-nmaplot(net1, outcome = "Change in UPDRS motor score")
+nmaplot(net, outcome = "Fibrosis improvement without worsening of MASH")
 ```
 
 ```{r ring}
-# subgroup ring, e.g. study design (RCT vs PSM): one row per treatment x group (counts or %)
-design <- data.frame(treatment = rep(net1$trts, each = 2),
-                     group = rep(c("RCT", "PSM"), length(net1$trts)),
-                     value = c(4, 2,  3, 2,  2, 1,  3, 0,  2, 2))
-
-nmaplot(net1, ring = design, ring_name = "Study design", outcome = "Change in UPDRS motor score")
-```
-
-```{r layouts}
-nmaplot(net1, ring = design, ring_name = "Study design", outcome = "Change in UPDRS motor score", layout = "circle")
-nmaplot(net1, ring = design, ring_name = "Study design", outcome = "Change in UPDRS motor score", layout = "star")
+# outer ring from the design column of the data (RCT / PSM)
+nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+        outcome = "Fibrosis improvement without worsening of MASH")
 ```
 
 ```{r save}
-nmaplot(net1, ring = design, ring_name = "Study design", outcome = "Change in UPDRS motor score",
-        file = c("franchini_net_graph.png", "franchini_net_graph.pdf", "franchini_net_graph.tiff"),
-        width = 9, height = 9.5, dpi = 300)
+nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+        outcome = "Fibrosis improvement without worsening of MASH",
+        file = c("mash_net_graph.png", "mash_net_graph.pdf", "mash_net_graph.tiff"),
+        width = 10, height = 10.5, dpi = 300)
+```
+
+```{r layouts}
+nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+        outcome = "Fibrosis improvement without worsening of MASH", layout = "circle")
+nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+        outcome = "Fibrosis improvement without worsening of MASH", layout = "star")
 ```

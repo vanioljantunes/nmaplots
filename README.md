@@ -27,28 +27,29 @@ object you plot. `ragg` is optional (sharper PNG and TIFF output).
 library(netmeta)
 library(nmaplots)
 
-data(Franchini2012)
-p1 <- pairwise(list(Treatment1, Treatment2, Treatment3),
-               n = list(n1, n2, n3), mean = list(y1, y2, y3),
-               sd = list(sd1, sd2, sd3), data = Franchini2012, studlab = Study)
-net1 <- netmeta(p1, sm = "MD", reference.group = "plac")
+data(mash)
+d <- mash$fib_improvement_alldoses
+p <- pairwise(treat = treatment, event = responders, n = sampleSize,
+              studlab = study, data = d, sm = "RR")
+net <- netmeta(p, reference.group = "Placebo")
 
-# Same input as netgraph(net1). Title is centred; the outcome becomes the subtitle.
-nmaplot(net1, outcome = "Change in UPDRS motor score")
+# Same input as netgraph(net). Title is centred; the outcome becomes the subtitle.
+nmaplot(net, outcome = "Fibrosis improvement without worsening of MASH")
 
-# Outer ring: any subgroup composition, one row per treatment and group
-design <- data.frame(treatment = rep(net1$trts, each = 2),
-                     group = rep(c("RCT", "PSM"), 5),
-                     value = c(4, 2,  3, 2,  2, 1,  3, 0,  2, 2))
-nmaplot(net1, ring = design, ring_name = "Study design",
-        outcome = "Change in UPDRS motor score")
+# Outer ring from a column of the data: one label per study arm, counted per
+# treatment. Here study design (RCT / PSM), but any categorical column works.
+nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+        outcome = "Fibrosis improvement without worsening of MASH")
 
 # Save as PNG, PDF or TIFF (format from the extension)
-nmaplot(net1, ring = design, ring_name = "Study design",
-        outcome = "Change in UPDRS motor score",
+nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+        outcome = "Fibrosis improvement without worsening of MASH",
         file = c("network.png", "network.pdf", "network.tiff"),
         width = 9, height = 9.5, dpi = 300)
 ```
+
+`mash` is the built-in example: arm-level results of drug trials for MASH
+with fibrosis, four outcomes (`?mash`). Its `design` column is illustrative.
 
 ## What you can change
 
@@ -83,7 +84,7 @@ The function returns a `ggplot` object. Add layers or a different theme with
 
 ## Gallery
 
-Default look (smoking cessation, netmeta example data):
+Default look (`mash`, fibrosis improvement):
 
 ![default network plot](man/figures/default.png)
 
@@ -99,7 +100,7 @@ figures is `inst/examples/demo.R`.
 
 ## Test notebook
 
-`inst/examples/nmaplot_netmeta.Rmd`: load packages, `data(Franchini2012)`
+`inst/examples/nmaplot_netmeta.Rmd`: load packages, `data(mash)`
 (the netmeta vignette example), fit `netmeta()`, plot with `nmaplot()`,
 save to PNG/PDF/TIFF, then a few layout variants.
 

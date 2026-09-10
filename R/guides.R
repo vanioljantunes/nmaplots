@@ -9,19 +9,21 @@
 #' @section Step 1, fit the network meta-analysis:
 #' ```r
 #' library(netmeta); library(nmaplots)
-#' data(Franchini2012)
-#' p1 <- pairwise(list(Treatment1, Treatment2, Treatment3),
-#'                n = list(n1, n2, n3), mean = list(y1, y2, y3),
-#'                sd = list(sd1, sd2, sd3), data = Franchini2012, studlab = Study)
-#' net1 <- netmeta(p1, sm = "MD", reference.group = "plac")
+#' data(mash)
+#' d <- mash$fib_improvement_alldoses
+#' p <- pairwise(treat = treatment, event = responders, n = sampleSize,
+#'               studlab = study, data = d, sm = "RR")
+#' net <- netmeta(p, reference.group = "Placebo")
 #' ```
-#' Any `netmeta` object works. Sample sizes appear on the plot when the
-#' object carries them (`n1`/`n2`, which `pairwise()` supplies when you give
-#' `n`); otherwise the number of studies per treatment is shown as `k = ...`.
+#' `mash` ships with the package: arm-level data, one row per study arm,
+#' which is what `pairwise()` takes. Any `netmeta` object works. Sample sizes
+#' appear on the plot when the object carries them (`n1`/`n2`, which
+#' `pairwise()` supplies when you give `n`); otherwise the number of studies
+#' per treatment is shown as `k = ...`.
 #'
 #' @section Step 2, draw:
 #' ```r
-#' nmaplot(net1, outcome = "Change in UPDRS motor score")
+#' nmaplot(net, outcome = "Fibrosis improvement without worsening of MASH")
 #' ```
 #' Defaults: treatments on a polygon (`layout = "multi"`), node area
 #' proportional to the sample size, reference treatment in grey and the
@@ -36,7 +38,7 @@
 #'
 #' @section Step 3, save:
 #' ```r
-#' nmaplot(net1, outcome = "Change in UPDRS motor score",
+#' nmaplot(net, outcome = "Fibrosis improvement without worsening of MASH",
 #'         file = c("network.png", "network.pdf", "network.tiff"),
 #'         width = 9, height = 9, dpi = 300)
 #' ```
@@ -60,13 +62,20 @@ NULL
 #' funding source, anything you can count per treatment.
 #'
 #' @section What to pass:
-#' A long data frame with one row per treatment and group:
+#' The easiest source is a column of your own data: one label per study arm,
+#' counted per treatment with `table()`. That gives a wide matrix (rows =
+#' treatments, columns = groups), which `ring` accepts directly:
 #' ```r
-#' design <- data.frame(treatment = rep(net1$trts, each = 2),
-#'                      group = rep(c("RCT", "PSM"), 5),
-#'                      value = c(4, 2,  3, 2,  2, 1,  3, 0,  2, 2))
-#' nmaplot(net1, ring = design, ring_name = "Study design",
-#'         outcome = "Change in UPDRS motor score")
+#' d <- mash$fib_improvement_alldoses
+#' nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+#'         outcome = "Fibrosis improvement without worsening of MASH")
+#' ```
+#' A long data frame with one row per treatment and group works as well:
+#' ```r
+#' design <- data.frame(treatment = c("Placebo", "Placebo", "Drug A", "Drug A"),
+#'                      group = c("RCT", "PSM", "RCT", "PSM"),
+#'                      value = c(6, 3, 2, 1))
+#' nmaplot(net, ring = design, ring_name = "Study design")
 #' ```
 #' The first three columns are used whatever their names: treatment, group,
 #' value. Values can be counts or proportions; each treatment is normalised

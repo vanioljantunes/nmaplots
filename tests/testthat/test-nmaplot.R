@@ -167,3 +167,20 @@ test_that("legend panel extends the window downwards", {
   p1 <- nmaplot(net, legend = TRUE)
   expect_lt(p1$coordinates$limits$y[1], p0$coordinates$limits$y[1])
 })
+
+test_that("mash dataset loads and plots with a ring from its design column", {
+  data(mash, package = "nmaplots", envir = environment())
+  expect_named(mash, c("fib_improvement", "mash_resolution",
+                       "fib_improvement_alldoses", "mash_resolution_alldoses"))
+  d <- mash$fib_improvement_alldoses
+  expect_equal(names(d), c("study", "treatment", "responders", "sampleSize",
+                           "rob", "incrr", "design"))
+  expect_true(all(d$design %in% c("RCT", "PSM")))
+  p <- pairwise(treat = treatment, event = responders, n = sampleSize,
+                studlab = study, data = d, sm = "RR")
+  net <- suppressWarnings(netmeta(p, reference.group = "Placebo"))
+  g <- nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design")
+  expect_s3_class(g, "ggplot")
+  expect_equal(nrow(g$nmaplot$nodes), length(net$trts))
+  expect_true(all(g$nmaplot$rings$group %in% c("RCT", "PSM")))
+})

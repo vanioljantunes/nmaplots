@@ -79,6 +79,10 @@ complete_order <- function(order, trts) {
   c(order, setdiff(trts, order))
 }
 
+# Radius of the polygon / circle the treatments sit on. Grows with the number
+# of treatments so that labels keep room; 1 for up to six treatments.
+layout_radius <- function(n) 1 + 0.15 * max(0, n - 6)
+
 # Points evenly spaced on a circle, starting at the top and going clockwise.
 circle_coords <- function(n, radius = 1) {
   if (n == 0) return(matrix(numeric(0), ncol = 2))
@@ -111,7 +115,7 @@ nma_layout <- function(layout, trts, order, reference, net) {
   n <- length(trts)
 
   if (layout == "multi") {
-    m <- circle_coords(n)
+    m <- circle_coords(n, layout_radius(n))
     rownames(m) <- order
     return(m[trts, , drop = FALSE])
   }
@@ -119,13 +123,13 @@ nma_layout <- function(layout, trts, order, reference, net) {
   if (layout == "circle") {
     # most connected treatment at the top, then clockwise by decreasing degree
     ord <- trts[order(-net$degree, -net$k.trts, trts)]
-    m <- circle_coords(n)
+    m <- circle_coords(n, layout_radius(n))
     rownames(m) <- ord
     return(m[trts, , drop = FALSE])
   }
 
   others <- setdiff(order, reference)
-  m <- rbind(c(0, 0), circle_coords(length(others)))
+  m <- rbind(c(0, 0), circle_coords(length(others), layout_radius(length(others) + 1)))
   rownames(m) <- c(reference, others)
   m[trts, , drop = FALSE]
 }

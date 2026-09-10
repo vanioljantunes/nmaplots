@@ -127,19 +127,16 @@
 #' @examples
 #' if (requireNamespace("netmeta", quietly = TRUE)) {
 #'   library(netmeta)
-#'   data(Franchini2012)
-#'   p1 <- pairwise(list(Treatment1, Treatment2, Treatment3),
-#'                  n = list(n1, n2, n3), mean = list(y1, y2, y3),
-#'                  sd = list(sd1, sd2, sd3), data = Franchini2012,
-#'                  studlab = Study)
-#'   net1 <- netmeta(p1, sm = "MD", reference.group = "plac")
-#'   nmaplot(net1, title = "Parkinson", subtitle = "Franchini 2012")
+#'   data(mash)
+#'   d <- mash$fib_improvement_alldoses
+#'   p <- pairwise(treat = treatment, event = responders, n = sampleSize,
+#'                 studlab = study, data = d, sm = "RR")
+#'   net <- netmeta(p, reference.group = "Placebo")
+#'   nmaplot(net, outcome = "Fibrosis improvement without worsening of MASH")
 #'
-#'   design <- data.frame(treatment = rep(net1$trts, each = 2),
-#'                        group = rep(c("RCT", "PSM"), length(net1$trts)),
-#'                        value = c(4, 2,  3, 2,  2, 1,  3, 0,  2, 2))
-#'   nmaplot(net1, ring = design, ring_name = "Study design",
-#'           outcome = "Change in UPDRS motor score")
+#'   # outer ring from a column of the data (here study design)
+#'   nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+#'           outcome = "Fibrosis improvement without worsening of MASH")
 #' }
 #'
 #' @importFrom ggplot2 ggplot aes geom_segment geom_polygon geom_text geom_label geom_rect coord_equal labs theme theme_void element_rect element_line element_text element_blank margin unit ggsave scale_fill_identity scale_colour_identity scale_linewidth_identity .data
@@ -292,7 +289,7 @@ nmaplot <- function(x,
     size_label <- if (use_n) "Node size = number of participants" else
       "Node size = number of studies"
     # area proportional to the driver: radius ~ sqrt
-    nodes$size <- rescale_range(sqrt(driver), node_size_range)
+    nodes$size <- rescale_range(sqrt(driver), node_size_range * sqrt(layout_radius(n_trt)))
     nodes$size_driver <- driver
   }
 
@@ -369,8 +366,10 @@ nmaplot <- function(x,
   off <- nodes$r_out + ifelse(nodes$has_ring, pct_pad, 0) + label_offset
   nodes$lx <- nodes$x + ux * off
   nodes$ly <- nodes$y + uy * off
-  nodes$hjust <- (1 - ux) / 2
-  nodes$vjust <- (1 - uy) / 2
+  # snap the anchor to the corner of the text block that faces the node, so
+  # the block never overlaps the disc whatever the direction
+  nodes$hjust <- ifelse(ux > 0.3, 0, ifelse(ux < -0.3, 1, 0.5))
+  nodes$vjust <- ifelse(uy > 0.3, 0, ifelse(uy < -0.3, 1, 0.5))
   # a node sitting in the middle of the network (star layout) has spokes all
   # around it: write its label inside the disc when the disc is wide enough
   upi0 <- 2.9 / max(width, 1)
@@ -454,7 +453,7 @@ nmaplot <- function(x,
   p <- ggplot()
 
   if (is.character(layout) && identical(layout[1], "circle") && isTRUE(circle_guide)) {
-    guide <- circle_poly(mean(nodes$x), mean(nodes$y), 1, n = 180)
+    guide <- circle_poly(mean(nodes$x), mean(nodes$y), layout_radius(n_trt), n = 180)
     guide <- rbind(guide, guide[1, ])
     p <- p + ggplot2::geom_path(
       data = guide, aes(x = .data$x, y = .data$y),

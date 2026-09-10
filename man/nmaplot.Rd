@@ -256,19 +256,16 @@ layouts, a bottom legend panel, and direct export to PNG, PDF or TIFF.
 \examples{
 if (requireNamespace("netmeta", quietly = TRUE)) {
   library(netmeta)
-  data(Franchini2012)
-  p1 <- pairwise(list(Treatment1, Treatment2, Treatment3),
-                 n = list(n1, n2, n3), mean = list(y1, y2, y3),
-                 sd = list(sd1, sd2, sd3), data = Franchini2012,
-                 studlab = Study)
-  net1 <- netmeta(p1, sm = "MD", reference.group = "plac")
-  nmaplot(net1, title = "Parkinson", subtitle = "Franchini 2012")
+  data(mash)
+  d <- mash$fib_improvement_alldoses
+  p <- pairwise(treat = treatment, event = responders, n = sampleSize,
+                studlab = study, data = d, sm = "RR")
+  net <- netmeta(p, reference.group = "Placebo")
+  nmaplot(net, outcome = "Fibrosis improvement without worsening of MASH")
 
-  design <- data.frame(treatment = rep(net1$trts, each = 2),
-                       group = rep(c("RCT", "PSM"), length(net1$trts)),
-                       value = c(4, 2,  3, 2,  2, 1,  3, 0,  2, 2))
-  nmaplot(net1, ring = design, ring_name = "Study design",
-          outcome = "Change in UPDRS motor score")
+  # outer ring from a column of the data (here study design)
+  nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+          outcome = "Fibrosis improvement without worsening of MASH")
 }
 
 }

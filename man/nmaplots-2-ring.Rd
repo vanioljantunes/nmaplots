@@ -11,13 +11,21 @@ funding source, anything you can count per treatment.
 }
 \section{What to pass}{
 
-A long data frame with one row per treatment and group:
+The easiest source is a column of your own data: one label per study arm,
+counted per treatment with \code{table()}. That gives a wide matrix (rows =
+treatments, columns = groups), which \code{ring} accepts directly:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{design <- data.frame(treatment = rep(net1$trts, each = 2),
-                     group = rep(c("RCT", "PSM"), 5),
-                     value = c(4, 2,  3, 2,  2, 1,  3, 0,  2, 2))
-nmaplot(net1, ring = design, ring_name = "Study design",
-        outcome = "Change in UPDRS motor score")
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{d <- mash$fib_improvement_alldoses
+nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+        outcome = "Fibrosis improvement without worsening of MASH")
+}\if{html}{\out{</div>}}
+
+A long data frame with one row per treatment and group works as well:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{design <- data.frame(treatment = c("Placebo", "Placebo", "Drug A", "Drug A"),
+                     group = c("RCT", "PSM", "RCT", "PSM"),
+                     value = c(6, 3, 2, 1))
+nmaplot(net, ring = design, ring_name = "Study design")
 }\if{html}{\out{</div>}}
 
 The first three columns are used whatever their names: treatment, group,

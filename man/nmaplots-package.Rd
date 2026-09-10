@@ -36,22 +36,19 @@ number comes from the \code{netmeta} object.
 
 \section{Example data}{
 
-The examples use the data sets shipped with \pkg{netmeta}:
-\code{Franchini2012} (Parkinson's disease, continuous outcome, the netmeta
-vignette example) and \code{smokingcessation} (binary outcome with multi-arm
-trials).
+\link{mash}: arm-level results of trials of drugs for MASH with fibrosis, four
+outcomes, with a \code{design} column for the ring examples.
 }
 
 \examples{
 if (requireNamespace("netmeta", quietly = TRUE)) {
   library(netmeta)
-  data(Franchini2012)
-  p1 <- pairwise(list(Treatment1, Treatment2, Treatment3),
-                 n = list(n1, n2, n3), mean = list(y1, y2, y3),
-                 sd = list(sd1, sd2, sd3), data = Franchini2012,
-                 studlab = Study)
-  net1 <- netmeta(p1, sm = "MD", reference.group = "plac")
-  nmaplot(net1, outcome = "Change in UPDRS motor score")
+  data(mash)
+  d <- mash$fib_improvement_alldoses
+  p <- pairwise(treat = treatment, event = responders, n = sampleSize,
+                studlab = study, data = d, sm = "RR")
+  net <- netmeta(p, reference.group = "Placebo")
+  nmaplot(net, outcome = "Fibrosis improvement without worsening of MASH")
 }
 
 }

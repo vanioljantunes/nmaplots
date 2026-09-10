@@ -11,6 +11,7 @@ Description: A single-function companion to the 'netmeta' package. nmaplot()
     optional grid, and direct export to PNG, PDF or TIFF.
 License: MIT + file LICENSE
 Encoding: UTF-8
+LazyData: true
 Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.1)
