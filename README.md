@@ -56,6 +56,7 @@ with fibrosis, four outcomes (`?mash`). Its `design` column is illustrative.
 | Feature | Argument(s) |
 |---|---|
 | Outcome and ring names | `outcome` (subtitle), `ring_name` (subtitle + legend) |
+| Event-rate ring on binary networks | drawn by default; `ring = FALSE` removes it |
 | Subgroup ring around nodes | `ring` (long data frame treatment/group/value, or wide matrix), `ring_colors`, `ring_width`, `ring_labels`, `ring_title` |
 | Boxed legend below the network | on by default; `legend = FALSE` removes it, `legend_size` |
 | Fonts | `font_family = "serif"` (default) or `"sans"` |

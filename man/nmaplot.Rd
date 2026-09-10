@@ -100,11 +100,14 @@ treatments, in the order of \code{x$trts} (or a named vector).}
 randomised participants (\verb{n = 1,234 (18\%)}) under each treatment name. When the \code{netmeta} object has no sample sizes the number
 of studies is printed instead (\code{k = 4}).}
 
-\item{ring}{Optional subgroup composition drawn as a ring around each node.
-Either a long data frame with three columns (treatment, group, value) or
-a wide matrix / data frame with one row per treatment (row names) and one
-column per group. Values are counts or proportions; each treatment is
-normalised to 100 percent. Treatments missing from \code{ring} get no ring.}
+\item{ring}{Subgroup composition drawn as a ring around each node. The
+default (\code{NULL}) draws the event rate of every treatment when the network
+is binary (events over participants, taken from the \code{netmeta} object) and
+nothing otherwise; \code{FALSE} never draws a ring. Supply your own as a long
+data frame with three columns (treatment, group, value) or a wide matrix /
+data frame with one row per treatment (row names) and one column per
+group. Values are counts or proportions; each treatment is normalised to
+100 percent. Treatments missing from \code{ring} get no ring.}
 
 \item{ring_colors}{Colours for the ring groups: a named vector (names =
 groups) or a vector in the order of the groups. Defaults to a muted

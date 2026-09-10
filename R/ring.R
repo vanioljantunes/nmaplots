@@ -57,6 +57,7 @@ normalise_ring <- function(ring, trts) {
   rownames(out) <- NULL
   out <- out[out$prop > 0, , drop = FALSE]
   out$group <- as.character(out$group)
+  out$show_pct <- TRUE
   list(data = out, groups = groups)
 }
 
@@ -193,7 +194,7 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
     bx0 <- cxs[isec] - blk / 2
     ex_c <- circle_poly(bx0 + rex * 1.5, cy, rex)
     ex_c$id <- "EX0"
-    ex_c$fill <- reference_fill
+    ex_c$fill <- if (is.null(reference_fill)) "#8A939B" else reference_fill
     circles[[4]] <- ex_c
     ang <- pi / 2 - 2 * pi * seq(0, 1, length.out = k + 1)
     ringex <- do.call(rbind, lapply(seq_len(k), function(i) {

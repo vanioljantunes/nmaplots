@@ -29,11 +29,14 @@
 #' @param show_n Logical. Print the sample size and its share of all
 #'   randomised participants (`n = 1,234 (18%)`) under each treatment name. When the `netmeta` object has no sample sizes the number
 #'   of studies is printed instead (`k = 4`).
-#' @param ring Optional subgroup composition drawn as a ring around each node.
-#'   Either a long data frame with three columns (treatment, group, value) or
-#'   a wide matrix / data frame with one row per treatment (row names) and one
-#'   column per group. Values are counts or proportions; each treatment is
-#'   normalised to 100 percent. Treatments missing from `ring` get no ring.
+#' @param ring Subgroup composition drawn as a ring around each node. The
+#'   default (`NULL`) draws the event rate of every treatment when the network
+#'   is binary (events over participants, taken from the `netmeta` object) and
+#'   nothing otherwise; `FALSE` never draws a ring. Supply your own as a long
+#'   data frame with three columns (treatment, group, value) or a wide matrix /
+#'   data frame with one row per treatment (row names) and one column per
+#'   group. Values are counts or proportions; each treatment is normalised to
+#'   100 percent. Treatments missing from `ring` get no ring.
 #' @param ring_colors Colours for the ring groups: a named vector (names =
 #'   groups) or a vector in the order of the groups. Defaults to a muted
 #'   blue / red / green set.
@@ -319,13 +322,30 @@ nmaplot <- function(x,
   # ---- ring ------------------------------------------------------------------
   rings <- NULL
   ring_groups <- character(0)
-  if (!is.null(ring)) {
+  auto_ring <- FALSE
+  if (is.null(ring) && net$has.events && net$has.n) {
+    # binary network: show each treatment's event rate by default
+    auto_ring <- TRUE
+    ev <- unname(net$e.trts[trts])
+    ring <- data.frame(
+      treatment = rep(trts, 2),
+      group = factor(rep(c("Events", "No event"), each = n_trt),
+                     levels = c("Events", "No event")),
+      value = c(ev, unname(net$n.trts[trts]) - ev),
+      stringsAsFactors = FALSE)
+    if (is.null(ring_colors))
+      ring_colors <- c("Events" = "#4E7CA8", "No event" = "#DFE3E7")
+    if (is.null(ring_name)) ring_name <- "Event rate"
+  }
+  if (!is.null(ring) && !isFALSE(ring)) {
     rg <- normalise_ring(ring, trts)
     if (!is.null(rg$data) && nrow(rg$data) > 0) {
       ring_groups <- rg$groups
       ring_cols <- resolve_ring_colors(ring_colors, ring_groups)
       rings <- rg$data
       rings$fill <- unname(ring_cols[rings$group])
+      # the automatic ring prints one percentage: the event rate
+      if (auto_ring) rings$show_pct <- rings$group == "Events"
     }
   }
   nodes$has_ring <- if (!is.null(rings)) nodes$trt %in% rings$treatment else FALSE
@@ -345,7 +365,9 @@ nmaplot <- function(x,
     line <- paste0(k_studies, ifelse(k_studies == 1, " study, ", " studies, "),
                    n_trt, " treatments",
                    if (net$has.n) paste0(", ", format_int(sum(net$n.trts, na.rm = TRUE)),
-                                         " patients") else "")
+                                         " patients") else "",
+                   if (net$has.events) paste0(", ", format_int(sum(net$e.trts, na.rm = TRUE)),
+                                              " events") else "")
     subtitle <- if (is.null(subtitle)) line else paste0(subtitle, "\n", line)
   }
   if (is.null(ring_title)) {
@@ -532,7 +554,7 @@ nmaplot <- function(x,
       colour = "white", linewidth = 0.5
     )
     if (isTRUE(ring_labels)) {
-      pl <- rings[rings$prop >= ring_label_min, , drop = FALSE]
+      pl <- rings[rings$prop >= ring_label_min & rings$show_pct, , drop = FALSE]
       if (nrow(pl)) {
         # put each percentage at the angle of its sector farthest from any
         # edge leaving that node, so the number never sits on a line
@@ -543,9 +565,12 @@ nmaplot <- function(x,
           k <- match(nb, nodes$trt)
           ea <- atan2(nodes$y[k] - nodes$y[j], nodes$x[k] - nodes$x[j])
           # keep the percentage away from the edges and from the whole
-          # width of the label block, not just its anchor direction
-          pct_angle(pl$a0[i], pl$a1[i],
-                    c(ea, ang[j] + c(-0.5, -0.25, 0, 0.25, 0.5)))
+          # width of the label block, not just its anchor direction.
+          # A node showing a single percentage (the event rate) may put it
+          # anywhere on its ring, so a thin segment still lands in the clear.
+          avoid <- c(ea, ang[j] + c(-0.5, -0.25, 0, 0.25, 0.5))
+          if (sum(pl$treatment == t) == 1) pct_angle(-pi, pi, avoid)
+          else pct_angle(pl$a0[i], pl$a1[i], avoid)
         }, numeric(1))
         rr <- pl$r1 + 0.02
         pl$px <- pl$x0 + rr * cos(am)

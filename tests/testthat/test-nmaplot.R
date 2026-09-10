@@ -184,3 +184,30 @@ test_that("mash dataset loads and plots with a ring from its design column", {
   expect_equal(nrow(g$nmaplot$nodes), length(net$trts))
   expect_true(all(g$nmaplot$rings$group %in% c("RCT", "PSM")))
 })
+
+test_that("binary networks get an event-rate ring by default", {
+  data(mash, package = "nmaplots", envir = environment())
+  d <- mash$fib_improvement_alldoses
+  pw <- pairwise(treat = treatment, event = responders, n = sampleSize,
+                 studlab = study, data = d, sm = "RR")
+  net <- suppressWarnings(netmeta(pw, reference.group = "Placebo"))
+  g <- nmaplot(net)
+  expect_false(is.null(g$nmaplot$rings))
+  expect_setequal(unique(g$nmaplot$rings$group), c("Events", "No event"))
+  # the ring proportion of the Events segment is events over participants
+  ev <- g$nmaplot$rings[g$nmaplot$rings$group == "Events", ]
+  i <- match(ev$treatment, names(net$events.trts))
+  expect_equal(ev$prop, unname(net$events.trts[i] / net$n.trts[i]), tolerance = 1e-8)
+  # only the event segment is labelled
+  expect_true(all(g$nmaplot$rings$show_pct == (g$nmaplot$rings$group == "Events")))
+  # ring = FALSE turns it off
+  expect_null(nmaplot(net, ring = FALSE)$nmaplot$rings)
+})
+
+test_that("continuous networks get no ring and no event count", {
+  net <- make_net_no_n()
+  g <- nmaplot(net)
+  expect_null(g$nmaplot$rings)
+  sub <- g$labels$subtitle
+  expect_false(!is.null(sub) && grepl("events", sub))
+})

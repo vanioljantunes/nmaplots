@@ -1,5 +1,11 @@
 # nmaplots 0.2.0.9000
 
+* Binary networks draw an event-rate ring by default: each node shows events
+  over participants, with that one percentage printed outside the ring.
+  `ring = FALSE` removes it, any `ring` of your own replaces it, and
+  continuous networks are unchanged.
+* The summary line under the subtitle ends with the total number of events
+  when the network is binary.
 * Thinner default edges (`edge_width_range = c(0.3, 2)` mm).
 * Node labels put the share on the same row as the count, `n = 374 (23%)`.
 * Legend: every section header sits on a shaded band, with a larger bold name

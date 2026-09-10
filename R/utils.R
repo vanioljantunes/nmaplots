@@ -45,6 +45,20 @@ nma_network <- function(x) {
     n.trts <- stats::setNames(rep(NA_real_, length(trts)), trts)
   }
 
+  # events per treatment: netmeta stores events.trts for binary outcomes
+  e.trts <- x$events.trts
+  has.events <- !is.null(e.trts) && !all(is.na(e.trts)) &&
+    any(e.trts > 0, na.rm = TRUE)
+  if (has.events) {
+    e.trts <- stats::setNames(as.numeric(e.trts), names(x$events.trts))
+    if (is.null(names(e.trts)) || !all(trts %in% names(e.trts))) {
+      e.trts <- stats::setNames(as.numeric(x$events.trts), trts)
+    }
+    e.trts <- e.trts[trts]
+  } else {
+    e.trts <- stats::setNames(rep(NA_real_, length(trts)), trts)
+  }
+
   # number of studies per treatment
   k.trts <- x$k.trts
   if (is.null(k.trts) || is.null(names(k.trts)) || !all(trts %in% names(k.trts))) {
@@ -64,6 +78,7 @@ nma_network <- function(x) {
   multiarm <- Filter(function(v) length(v) > 2, as.list(arms))
 
   list(trts = trts, edges = edges, n.trts = n.trts, k.trts = k.trts,
+       e.trts = e.trts, has.events = has.events,
        has.n = has.n, degree = degree, multiarm = multiarm)
 }
 

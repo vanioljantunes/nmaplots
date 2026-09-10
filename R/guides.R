@@ -61,6 +61,12 @@ NULL
 #' propensity-score matched cohorts), risk of bias, region, dose class,
 #' funding source, anything you can count per treatment.
 #'
+#' @section The default ring:
+#' When the network is binary (the `netmeta` object carries event counts) the
+#' ring is drawn without being asked for: each node shows its event rate,
+#' events over participants, with that percentage printed outside the ring.
+#' `ring = FALSE` turns it off, and any `ring` of your own replaces it.
+#'
 #' @section What to pass:
 #' The easiest source is a column of your own data: one label per study arm,
 #' counted per treatment with `table()`. That gives a wide matrix (rows =

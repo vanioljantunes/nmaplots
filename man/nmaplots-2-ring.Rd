@@ -9,6 +9,14 @@ treatment split across the levels of a subgroup: study design (RCT versus
 propensity-score matched cohorts), risk of bias, region, dose class,
 funding source, anything you can count per treatment.
 }
+\section{The default ring}{
+
+When the network is binary (the \code{netmeta} object carries event counts) the
+ring is drawn without being asked for: each node shows its event rate,
+events over participants, with that percentage printed outside the ring.
+\code{ring = FALSE} turns it off, and any \code{ring} of your own replaces it.
+}
+
 \section{What to pass}{
 
 The easiest source is a column of your own data: one label per study arm,
