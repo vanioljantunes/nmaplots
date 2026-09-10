@@ -81,7 +81,7 @@ complete_order <- function(order, trts) {
 
 # Radius of the polygon / circle the treatments sit on. Grows with the number
 # of treatments so that labels keep room; 1 for up to six treatments.
-layout_radius <- function(n) 1 + 0.15 * max(0, n - 6)
+layout_radius <- function(n) 1 + 0.22 * max(0, n - 6)
 
 # Points evenly spaced on a circle, starting at the top and going clockwise.
 circle_coords <- function(n, radius = 1) {
@@ -269,8 +269,8 @@ nmaplot_theme <- function(grid, grid_color, background, title_size,
                                 colour = title_color, family = font_family,
                                 margin = margin(b = 3)),
       plot.subtitle = element_text(size = title_size * 0.68, hjust = hj,
-                                   colour = title_color,
-                                   family = font_family, margin = margin(b = 6)),
+                                   colour = title_color, lineheight = 1.05,
+                                   family = font_family, margin = margin(b = 8)),
       plot.caption = element_text(size = title_size * 0.55, hjust = 1,
                                   face = "italic", colour = title_color,
                                   family = font_family, margin = margin(t = 4)),

@@ -19,11 +19,12 @@ nmaplot(
   ring_name = NULL,
   ring_title = NULL,
   outcome = NULL,
+  summary_line = TRUE,
   font_family = "serif",
   label_wrap = 18,
   label_size = 14,
   label_color = "#1F2A44",
-  label_offset = 0.08,
+  label_offset = 0.06,
   node_size = c("n", "studies", "equal"),
   node_size_range = c(0.07, 0.2),
   node_fill = "#A94A47",
@@ -34,7 +35,7 @@ nmaplot(
   highlight = NULL,
   highlight_color = "#E4572E",
   edge_width = c("studies", "equal"),
-  edge_width_range = c(0.6, 4.5),
+  edge_width_range = c(0.5, 3),
   edge_color = "black",
   edge_alpha = 1,
   edge_style = c("single", "multi"),
@@ -125,6 +126,9 @@ Used in the subtitle and in the legend ("Outer ring = Risk of bias").}
 
 \item{outcome}{Name of the outcome. Becomes the subtitle (with the ring
 name appended when a ring is drawn) unless \code{subtitle} is given.}
+
+\item{summary_line}{Logical. Add a line under the subtitle with the number
+of studies, treatments and patients in the network.}
 
 \item{font_family}{Font family for all text. \code{"serif"} reproduces the
 reference look; use \code{"sans"} for Helvetica-like output.}

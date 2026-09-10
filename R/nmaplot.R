@@ -50,6 +50,8 @@
 #'   `"Outer ring = <ring_name>"`.
 #' @param outcome Name of the outcome. Becomes the subtitle (with the ring
 #'   name appended when a ring is drawn) unless `subtitle` is given.
+#' @param summary_line Logical. Add a line under the subtitle with the number
+#'   of studies, treatments and patients in the network.
 #' @param font_family Font family for all text. `"serif"` reproduces the
 #'   reference look; use `"sans"` for Helvetica-like output.
 #' @param label_wrap Integer. Wrap treatment names longer than this many
@@ -155,11 +157,12 @@ nmaplot <- function(x,
                     ring_name = NULL,
                     ring_title = NULL,
                     outcome = NULL,
+                    summary_line = TRUE,
                     font_family = "serif",
                     label_wrap = 18,
                     label_size = 14,
                     label_color = "#1F2A44",
-                    label_offset = 0.08,
+                    label_offset = 0.06,
                     node_size = c("n", "studies", "equal"),
                     node_size_range = c(0.07, 0.2),
                     node_fill = "#A94A47",
@@ -170,7 +173,7 @@ nmaplot <- function(x,
                     highlight = NULL,
                     highlight_color = "#E4572E",
                     edge_width = c("studies", "equal"),
-                    edge_width_range = c(0.6, 4.5),
+                    edge_width_range = c(0.5, 3),
                     edge_color = "black",
                     edge_alpha = 1,
                     edge_style = c("single", "multi"),
@@ -331,6 +334,15 @@ nmaplot <- function(x,
              substr(ring_name, 2, nchar(ring_name))))
     if (length(parts)) subtitle <- paste(parts, collapse = ". ")
   }
+  if (isTRUE(summary_line)) {
+    k_studies <- length(unique(as.character(x$studlab)))
+    line <- paste0(k_studies, ifelse(k_studies == 1, " study, ", " studies, "),
+                   n_trt, " treatments",
+                   if (net$has.n) paste0(", ", format_int(sum(net$n.trts, na.rm = TRUE)),
+                                         " patients") else "")
+    subtitle <- if (is.null(subtitle)) line else paste0(subtitle, "
+", line)
+  }
   if (is.null(ring_title)) {
     ring_title <- if (!is.null(ring_name)) paste0("Outer ring = ", ring_name) else
       "Outer ring = subgroup composition"
@@ -358,7 +370,10 @@ nmaplot <- function(x,
   centre <- c(mean(nodes$x), mean(nodes$y))
   dx <- nodes$x - centre[1]
   dy <- nodes$y - centre[2]
-  ang <- label_direction(nodes, net$edges, atan2(dy, dx))
+  # built-in layouts put the treatments on a circle: labels go straight
+  # outward. A custom coordinate matrix uses the emptiest angle instead.
+  ang <- if (is.character(layout)) atan2(dy, dx) else
+    label_direction(nodes, net$edges, atan2(dy, dx))
   ux <- cos(ang)
   uy <- sin(ang)
   # percent labels sit just outside the ring; the name goes beyond them
@@ -368,8 +383,8 @@ nmaplot <- function(x,
   nodes$ly <- nodes$y + uy * off
   # snap the anchor to the corner of the text block that faces the node, so
   # the block never overlaps the disc whatever the direction
-  nodes$hjust <- ifelse(ux > 0.3, 0, ifelse(ux < -0.3, 1, 0.5))
-  nodes$vjust <- ifelse(uy > 0.3, 0, ifelse(uy < -0.3, 1, 0.5))
+  nodes$hjust <- ifelse(ux > 0.15, 0, ifelse(ux < -0.15, 1, 0.5))
+  nodes$vjust <- ifelse(uy > 0.15, 0, ifelse(uy < -0.15, 1, 0.5))
   # a node sitting in the middle of the network (star layout) has spokes all
   # around it: write its label inside the disc when the disc is wide enough
   upi0 <- 2.9 / max(width, 1)
@@ -400,6 +415,8 @@ nmaplot <- function(x,
     edges$width <- rep(edge_width[1], nrow(edges))
   } else if (edge_width == "equal") {
     edges$width <- rep(mean(edge_width_range), nrow(edges))
+  } else if (length(unique(edges$studies)) < 2) {
+    edges$width <- rep(edge_width_range[1], nrow(edges))
   } else {
     edges$width <- rescale_range(edges$studies, edge_width_range)
   }
