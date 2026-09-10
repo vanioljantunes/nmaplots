@@ -76,16 +76,17 @@ resolve_ring_colors <- function(ring_colors, groups) {
 }
 
 # Legend panel drawn in data space under the network: one framed box with
-# centred sections for node size, the circled study count and (if present)
-# the ring groups.
+# centred sections (node size, circled study count, centre node for the star
+# layout, ring groups). Each section has a bold name and a lighter descriptor.
 build_legend <- function(nodes, edges, rings, ring_groups, size_label,
-                         edge_width_range, ring_title, win, has_n, rc) {
+                         edge_width_range, ring_title, win, has_n, rc,
+                         ring_name = NULL, reference_fill = "#8A939B") {
   centre <- if (!is.null(nodes$in_legend) && any(nodes$in_legend)) nodes[which(nodes$in_legend)[1], ] else NULL
   n_sec <- 2 + (!is.null(centre)) + (!is.null(rings))
   lim <- win$hw
   gap <- 0.04 * lim
   top <- win$ylim[1] - gap
-  hgt <- 0.34 * lim
+  hgt <- 0.46 * lim
   bottom <- top - hgt
   wsec <- diff(win$xlim) / n_sec
   xs <- win$xlim[1] + (seq_len(n_sec) - 1) * wsec
@@ -93,52 +94,60 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
   boxes <- data.frame(xmin = win$xlim[1], xmax = win$xlim[2], ymin = bottom, ymax = top)
   dividers <- data.frame(x = xs[-1], xend = xs[-1], y = bottom, yend = top)
   pad <- 0.04 * lim
-  ty <- top - pad - 0.025 * lim            # title line
-  cy <- (bottom + ty - 0.04 * lim) / 2     # middle of the item area
+  ty <- top - pad - 0.03 * lim               # section name
+  ty2 <- ty - 0.075 * lim                    # descriptor
+  cy <- (bottom + ty2 - 0.05 * lim) / 2      # middle of the item area
   text <- list()
   circles <- list()
   lines <- list()
   squares <- NULL
+  ringex <- NULL
 
-  # section 1: node size (two discs with their n, centred as a group)
-  txt1 <- if (is.null(size_label)) "Node size" else size_label
-  txt1 <- sub("number of participants", "participants", txt1, fixed = TRUE)
-  text[[1]] <- data.frame(x = cxs[1], y = ty, label = txt1,
-                          face = "bold", hjust = 0.5, stringsAsFactors = FALSE)
-  sc <- min(1, 0.075 * wsec / max(nodes$size))
+  hdr <- function(i, name, what) {
+    rbind(data.frame(x = cxs[i], y = ty, label = name, face = "bold", hjust = 0.5,
+                     sz = 1.25, stringsAsFactors = FALSE),
+          data.frame(x = cxs[i], y = ty2, label = what, face = "plain", hjust = 0.5,
+                     sz = 0.95, stringsAsFactors = FALSE))
+  }
+  item <- function(x, y, label) {
+    data.frame(x = x, y = y, label = label, face = "plain", hjust = 0,
+               sz = 1, stringsAsFactors = FALSE)
+  }
+
+  # section 1: node size, two discs stacked
+  what1 <- if (is.null(size_label)) "" else
+    sub("^Node size = (number of )?", "", size_label)
+  what1 <- paste0(toupper(substr(what1, 1, 1)), substr(what1, 2, nchar(what1)))
+  text[[1]] <- hdr(1, "Node size", what1)
+  sc <- min(1, 0.07 * wsec / max(nodes$size))
   rmax <- max(nodes$size) * sc
   rmin <- min(nodes$size) * sc
   pre <- if (isTRUE(has_n)) "n = " else "k = "
   lab_big <- if (!is.null(nodes$size_driver)) paste0(pre, format_int(max(nodes$size_driver))) else "largest"
   lab_small <- if (!is.null(nodes$size_driver)) paste0(pre, format_int(min(nodes$size_driver))) else "smallest"
-  tw <- 0.22 * wsec                        # room for the text after each disc
-  grp <- 2 * rmax + 0.02 * lim + tw + (if (rmin < rmax) 0.06 * wsec + 2 * rmin + 0.02 * lim + tw else 0)
+  tw <- 0.30 * wsec
+  grp <- 2 * rmax + 0.03 * lim + tw
   x0 <- cxs[1] - grp / 2
   cx1 <- x0 + rmax
-  c1 <- circle_poly(cx1, cy, rmax)
+  y1 <- cy + rmin + 0.03 * lim
+  y2 <- cy - rmax - 0.03 * lim
+  c1 <- circle_poly(cx1, y1, rmax)
   c1$id <- "L1"
   c1$fill <- "#C9CDD2"
   circles[[1]] <- c1
-  text[[2]] <- data.frame(x = cx1 + rmax + 0.02 * lim, y = cy,
-                          label = paste0(lab_big, "\n(larger node)"),
-                          face = "plain", hjust = 0, stringsAsFactors = FALSE)
+  text[[2]] <- item(cx1 + rmax + 0.03 * lim, y1, paste0(lab_big, " (larger)"))
   if (rmin < rmax) {
-    cx2 <- cx1 + rmax + 0.02 * lim + tw + 0.06 * wsec + rmin
-    c2 <- circle_poly(cx2, cy, rmin)
+    c2 <- circle_poly(cx1, y2, rmin)
     c2$id <- "L2"
     c2$fill <- "#C9CDD2"
     circles[[2]] <- c2
-    text[[3]] <- data.frame(x = cx2 + rmin + 0.02 * lim, y = cy,
-                            label = paste0(lab_small, "\n(smaller node)"),
-                            face = "plain", hjust = 0, stringsAsFactors = FALSE)
+    text[[3]] <- item(cx1 + rmax + 0.03 * lim, y2, paste0(lab_small, " (smaller)"))
   }
 
-  # section 2: one line with the circled study count, centred as a group
-  text[[4]] <- data.frame(x = cxs[2], y = ty,
-                          label = "Circled number = direct studies",
-                          face = "bold", hjust = 0.5, stringsAsFactors = FALSE)
-  llen <- 0.34 * wsec
-  grp2 <- llen + 0.03 * lim + 0.36 * wsec
+  # section 2: one line with the circled study count
+  text[[4]] <- hdr(2, "Circled number", "Direct studies")
+  llen <- 0.30 * wsec
+  grp2 <- llen + 0.03 * lim + 0.38 * wsec
   lx0 <- cxs[2] - grp2 / 2
   lx1 <- lx0 + llen
   lines[[1]] <- data.frame(x = lx0, xend = lx1, y = cy, yend = cy,
@@ -148,52 +157,62 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
   dot$id <- "L"
   dot_text <- data.frame(x = (lx0 + lx1) / 2, y = cy, label = round(kex),
                          stringsAsFactors = FALSE)
-  text[[5]] <- data.frame(x = lx1 + 0.03 * lim, y = cy,
-                          label = "studies comparing\nthe two treatments",
-                          face = "plain", hjust = 0, stringsAsFactors = FALSE)
+  text[[5]] <- item(lx1 + 0.03 * lim, cy, paste0("studies comparing", "\n", "the two treatments"))
 
-  # section 3 (star layout): the centre node, described here instead of on the plot
+  # section 3 (star layout): the centre node
   isec <- 3
   if (!is.null(centre)) {
-    text[[8]] <- data.frame(x = cxs[isec], y = ty, label = "Centre node = reference",
-                            face = "bold", hjust = 0.5, stringsAsFactors = FALSE)
-    rcen <- min(centre$size, 0.075 * wsec)
-    ctxt <- if (nzchar(centre$nline)) paste(centre$name, centre$nline, sep = "\n") else centre$name
+    text[[6]] <- hdr(isec, "Centre node", "Reference")
+    rcen <- min(centre$size, 0.07 * wsec)
+    ctxt <- if (nzchar(centre$nline)) paste0(centre$name, "\n", centre$nline) else centre$name
     grp3 <- 2 * rcen + 0.03 * lim + 0.45 * wsec
     cx3 <- cxs[isec] - grp3 / 2 + rcen
     c3 <- circle_poly(cx3, cy, rcen)
     c3$id <- "L3"
     c3$fill <- centre$fill
     circles[[3]] <- c3
-    text[[9]] <- data.frame(x = cx3 + rcen + 0.03 * lim, y = cy, label = ctxt,
-                            face = "plain", hjust = 0, stringsAsFactors = FALSE)
+    text[[7]] <- item(cx3 + rcen + 0.03 * lim, cy, ctxt)
     isec <- 4
   }
 
-  # ring groups, stacked and centred as a block
+  # ring groups: a small ringed disc showing every colour, then the squares
   if (!is.null(rings)) {
-    text[[6]] <- data.frame(x = cxs[isec], y = ty, label = ring_title,
-                            face = "bold", hjust = 0.5, stringsAsFactors = FALSE)
+    what4 <- if (!is.null(ring_name)) ring_name else
+      sub("^Outer ring = ", "", ring_title)
+    text[[8]] <- hdr(isec, "Outer ring", what4)
     cols <- unique(rings[, c("group", "fill")])
     cols <- cols[match(ring_groups, cols$group), , drop = FALSE]
     cols <- cols[!is.na(cols$group), , drop = FALSE]
     k <- nrow(cols)
-    step <- min(0.10 * lim, (ty - 0.05 * lim - bottom - pad) / max(k, 1))
+    step <- min(0.10 * lim, (ty2 - 0.06 * lim - bottom - pad) / max(k, 1))
     ys <- cy + (k - 1) * step / 2 - (seq_len(k) - 1) * step
     sq <- 0.028 * lim
+    rex <- 0.06 * wsec
     wtxt <- max(nchar(cols$group)) * 0.55 * 11 / 72 * (2 * lim) / 9
-    blk <- 2 * sq + 0.03 * lim + wtxt
+    blk <- 2 * rex * 1.5 + 0.06 * lim + 2 * sq + 0.03 * lim + wtxt
     bx0 <- cxs[isec] - blk / 2
-    squares <- data.frame(xmin = bx0, xmax = bx0 + 2 * sq,
+    ex_c <- circle_poly(bx0 + rex * 1.5, cy, rex)
+    ex_c$id <- "EX0"
+    ex_c$fill <- reference_fill
+    circles[[4]] <- ex_c
+    ang <- pi / 2 - 2 * pi * seq(0, 1, length.out = k + 1)
+    ringex <- do.call(rbind, lapply(seq_len(k), function(i) {
+      d <- sector_poly(bx0 + rex * 1.5, cy, rex * 1.06, rex * 1.5, ang[i], ang[i + 1])
+      d$id <- paste0("EX", i)
+      d$fill <- cols$fill[i]
+      d
+    }))
+    sx0 <- bx0 + 2 * rex * 1.5 + 0.06 * lim
+    squares <- data.frame(xmin = sx0, xmax = sx0 + 2 * sq,
                           ymin = ys - sq, ymax = ys + sq, fill = cols$fill,
                           stringsAsFactors = FALSE)
-    text[[7]] <- data.frame(x = bx0 + 2 * sq + 0.03 * lim, y = ys,
-                            label = cols$group, face = "plain", hjust = 0,
+    text[[9]] <- data.frame(x = sx0 + 2 * sq + 0.03 * lim, y = ys,
+                            label = cols$group, face = "plain", hjust = 0, sz = 1,
                             stringsAsFactors = FALSE)
   }
 
   list(boxes = boxes, dividers = dividers, circles = do.call(rbind, circles),
        lines = do.call(rbind, lines), dot = dot, dot_text = dot_text,
-       squares = squares, text = do.call(rbind, text), ylo = bottom - gap,
-       n_sec = n_sec)
+       squares = squares, ringex = ringex, text = do.call(rbind, text),
+       ylo = bottom - gap, n_sec = n_sec)
 }

@@ -70,7 +70,7 @@ with fibrosis, four outcomes (`?mash`). Its `design` column is illustrative.
 | Node size | `node_size = "n" / "studies" / "equal"` or numeric, `node_size_range` |
 | Edge width | `edge_width = "studies" / "equal"` or numeric, `edge_width_range` |
 | Multi-arm study shading | `multiarm`, `multiarm_fill`, `multiarm_alpha` |
-| Labels | `labels` (display names), `label_wrap`, `label_size`, `label_position = "outside" / "center"`, `label_offset` |
+| Labels | `labels` (display names), `label_wrap`, `label_size`, `label_offset`, `label_box` (TRUE, FALSE or a fill colour) |
 | Export | `file`, `width`, `height`, `dpi` |
 
 `netgraph()` arguments `col.points`, `col`, `number.of.studies`, `cex`,

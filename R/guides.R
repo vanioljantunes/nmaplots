@@ -146,8 +146,9 @@ NULL
 #' share being that treatment's participants over all arms (`show_n = FALSE`
 #' drops the line). Names longer than `label_wrap` characters
 #' are wrapped. `labels` supplies display names (a named vector is safest).
-#' Each label is placed in the largest empty angle around its node so it
-#' does not cross an edge; `label_offset` moves it further out.
+#' Labels sit outside the node, every row centred; `label_offset` moves them
+#' further out. `label_box = TRUE` draws a white container behind each label,
+#' and a colour (`label_box = "#F3F4F6"`) fills the container with it.
 #'
 #' @section Legend and titles:
 #' The legend (`legend = TRUE` by default) is one framed box under the

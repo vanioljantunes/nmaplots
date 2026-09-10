@@ -54,8 +54,9 @@ Treatment names are bold with \verb{n = ... (x\% of total)} underneath, the
 share being that treatment's participants over all arms (\code{show_n = FALSE}
 drops the line). Names longer than \code{label_wrap} characters
 are wrapped. \code{labels} supplies display names (a named vector is safest).
-Each label is placed in the largest empty angle around its node so it
-does not cross an edge; \code{label_offset} moves it further out.
+Labels sit outside the node, every row centred; \code{label_offset} moves them
+further out. \code{label_box = TRUE} draws a white container behind each label,
+and a colour (\code{label_box = "#F3F4F6"}) fills the container with it.
 }
 
 \section{Legend and titles}{

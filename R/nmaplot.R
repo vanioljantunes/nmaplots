@@ -61,6 +61,9 @@
 #' @param label_color Colour of the treatment names.
 #' @param label_offset Gap between the node (or its ring) and the label, in
 #'   layout units (the network spans roughly -1 to 1).
+#' @param label_box Container behind each node label. `FALSE` (default) for
+#'   none, `TRUE` for a white box with a light border, or a colour (e.g.
+#'   `"#F3F4F6"`) for a box filled with that colour.
 #' @param node_size What drives the node area: `"n"` (sample size),
 #'   `"studies"` (number of studies including the treatment) or `"equal"`.
 #'   A numeric vector (length one or one per treatment) gives radii directly.
@@ -163,6 +166,7 @@ nmaplot <- function(x,
                     label_size = 14,
                     label_color = "#1F2A44",
                     label_offset = 0.06,
+                    label_box = FALSE,
                     node_size = c("n", "studies", "equal"),
                     node_size_range = c(0.07, 0.2),
                     node_fill = "#A94A47",
@@ -465,7 +469,8 @@ nmaplot <- function(x,
   if (isTRUE(legend)) {
     leg <- build_legend(nodes, edges, rings, ring_groups, size_label,
                         edge_width_range, ring_title, win, has_n = net$has.n,
-                        rc = edge_label_size * 1.05 / 72 * upi)
+                        rc = edge_label_size * 1.05 / 72 * upi,
+                        ring_name = ring_name, reference_fill = reference_fill)
     ylo <- leg$ylo
   }
 
@@ -616,26 +621,46 @@ nmaplot <- function(x,
   nl <- vapply(strsplit(nodes$name, "\n", fixed = TRUE), length, integer(1))
   nn <- ifelse(two, vapply(strsplit(nodes$nline, "\n", fixed = TRUE), length, integer(1)), 0L)
   blk <- (nl + nn) * line_h                          # text block height
+  chars_all <- vapply(strsplit(nodes$label, "\n", fixed = TRUE),
+                      function(v) max(nchar(v)), numeric(1))
+  tw <- chars_all * label_size * 0.5 / 72 * upi * nodes$tscale   # block width
   yb <- nodes$ly - nodes$vjust * blk                 # block bottom
+  # every row is centred on the block; the block itself sits on the far side
+  # of the anchor so it never touches the disc
+  nodes$cx <- nodes$lx + (0.5 - nodes$hjust) * tw
   nodes$n_y <- yb + nn * line_h / 2
   nodes$name_y <- yb + nn * line_h + nl * line_h / 2
   nodes$name_v <- 0.5
   nodes$tsize <- label_size * nodes$tscale / ggplot2::.pt
+  nodes$box_xmin <- nodes$cx - tw / 2 - 0.3 * line_h
+  nodes$box_xmax <- nodes$cx + tw / 2 + 0.3 * line_h
+  nodes$box_ymin <- yb - 0.25 * line_h
+  nodes$box_ymax <- yb + blk + 0.25 * line_h
   nodes$name_col <- ifelse(nodes$inside, contrast_text(nodes$fill), label_color)
   nodes$n_col <- ifelse(nodes$inside, contrast_text(nodes$fill), label_color)
   shown <- !nodes$in_legend
+  boxed <- shown & !nodes$inside
+  if (!isFALSE(label_box) && any(boxed)) {
+    box_fill <- if (isTRUE(label_box)) "white" else label_box
+    p <- p + geom_rect(
+      data = nodes[boxed, ],
+      aes(xmin = .data$box_xmin, xmax = .data$box_xmax,
+          ymin = .data$box_ymin, ymax = .data$box_ymax),
+      fill = box_fill, colour = "#C5C9CE", linewidth = 0.35
+    )
+  }
   p <- p + geom_text(
     data = nodes[shown, ],
-    aes(x = .data$lx, y = .data$name_y, label = .data$name, hjust = .data$hjust,
+    aes(x = .data$cx, y = .data$name_y, label = .data$name,
         vjust = .data$name_v, colour = .data$name_col, size = .data$tsize),
-    fontface = "bold", family = font_family, lineheight = 0.9
+    hjust = 0.5, fontface = "bold", family = font_family, lineheight = 0.9
   )
   if (any(two & shown)) {
     p <- p + geom_text(
       data = nodes[two & shown, ],
-      aes(x = .data$lx, y = .data$n_y, label = .data$nline, hjust = .data$hjust,
+      aes(x = .data$cx, y = .data$n_y, label = .data$nline,
           colour = .data$n_col, size = .data$tsize),
-      vjust = 0.5, family = font_family, lineheight = 0.9
+      hjust = 0.5, vjust = 0.5, family = font_family, lineheight = 0.9
     )
   }
   p <- p + ggplot2::scale_size_identity()
@@ -664,6 +689,11 @@ nmaplot <- function(x,
                 aes(x = .data$x, y = .data$y, label = .data$label),
                 size = edge_label_size / ggplot2::.pt, colour = edge_label_color,
                 fontface = "bold", family = font_family)
+    if (!is.null(leg$ringex) && nrow(leg$ringex)) {
+      p <- p + geom_polygon(data = leg$ringex,
+                            aes(x = .data$x, y = .data$y, group = .data$id, fill = .data$fill),
+                            colour = "white", linewidth = 0.4)
+    }
     if (!is.null(leg$squares) && nrow(leg$squares)) {
       p <- p + geom_rect(data = leg$squares,
                          aes(xmin = .data$xmin, xmax = .data$xmax, ymin = .data$ymin,
@@ -673,10 +703,9 @@ nmaplot <- function(x,
     p <- p +
       geom_text(data = leg$text,
                 aes(x = .data$x, y = .data$y, label = .data$label,
-                    fontface = .data$face, hjust = .data$hjust),
-                vjust = 0.5,
-                size = legend_size * (if (leg$n_sec >= 4) 0.9 else 1) / ggplot2::.pt,
-                colour = label_color, family = font_family, lineheight = 0.9)
+                    fontface = .data$face, hjust = .data$hjust,
+                    size = .data$sz * legend_size * (if (leg$n_sec >= 4) 0.9 else 1) / ggplot2::.pt),
+                vjust = 0.5, colour = label_color, family = font_family, lineheight = 0.9)
   }
 
   p <- p +

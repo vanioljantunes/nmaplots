@@ -25,6 +25,7 @@ nmaplot(
   label_size = 14,
   label_color = "#1F2A44",
   label_offset = 0.06,
+  label_box = FALSE,
   node_size = c("n", "studies", "equal"),
   node_size_range = c(0.07, 0.2),
   node_fill = "#A94A47",
@@ -143,6 +144,10 @@ sample-size line under them.}
 
 \item{label_offset}{Gap between the node (or its ring) and the label, in
 layout units (the network spans roughly -1 to 1).}
+
+\item{label_box}{Container behind each node label. \code{FALSE} (default) for
+none, \code{TRUE} for a white box with a light border, or a colour (e.g.
+\code{"#F3F4F6"}) for a box filled with that colour.}
 
 \item{node_size}{What drives the node area: \code{"n"} (sample size),
 \code{"studies"} (number of studies including the treatment) or \code{"equal"}.
