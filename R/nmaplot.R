@@ -340,8 +340,7 @@ nmaplot <- function(x,
                    n_trt, " treatments",
                    if (net$has.n) paste0(", ", format_int(sum(net$n.trts, na.rm = TRUE)),
                                          " patients") else "")
-    subtitle <- if (is.null(subtitle)) line else paste0(subtitle, "
-", line)
+    subtitle <- if (is.null(subtitle)) line else paste0(subtitle, "\n", line)
   }
   if (is.null(ring_title)) {
     ring_title <- if (!is.null(ring_name)) paste0("Outer ring = ", ring_name) else
