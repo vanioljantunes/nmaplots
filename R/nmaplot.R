@@ -391,8 +391,12 @@ nmaplot <- function(x,
                   function(v) max(nchar(v)), numeric(1))
   half_w <- chars * label_size * 0.55 / 72 * upi0 / 2
   centre_node <- sqrt(dx^2 + dy^2) < 0.15 & nodes$degree >= 3
+  is_star <- is.character(layout) && identical(layout, "star")
+  # star layout: the centre disc is described in the legend instead of on the
+  # plot (there is never room for text between the spokes)
+  nodes$in_legend <- is_star & centre_node
   nodes$tscale <- pmin(1, nodes$size * 0.92 / pmax(half_w, 1e-9))
-  nodes$inside <- centre_node & nodes$tscale >= 0.65
+  nodes$inside <- centre_node & !nodes$in_legend & nodes$tscale >= 0.65
   nodes$tscale[!nodes$inside] <- 1
   nodes$lx[nodes$inside] <- nodes$x[nodes$inside]
   nodes$ly[nodes$inside] <- nodes$y[nodes$inside]
@@ -619,15 +623,16 @@ nmaplot <- function(x,
   nodes$tsize <- label_size * nodes$tscale / ggplot2::.pt
   nodes$name_col <- ifelse(nodes$inside, contrast_text(nodes$fill), label_color)
   nodes$n_col <- ifelse(nodes$inside, contrast_text(nodes$fill), label_color)
+  shown <- !nodes$in_legend
   p <- p + geom_text(
-    data = nodes,
+    data = nodes[shown, ],
     aes(x = .data$lx, y = .data$name_y, label = .data$name, hjust = .data$hjust,
         vjust = .data$name_v, colour = .data$name_col, size = .data$tsize),
     fontface = "bold", family = font_family, lineheight = 0.9
   )
-  if (any(two)) {
+  if (any(two & shown)) {
     p <- p + geom_text(
-      data = nodes[two, ],
+      data = nodes[two & shown, ],
       aes(x = .data$lx, y = .data$n_y, label = .data$nline, hjust = .data$hjust,
           colour = .data$n_col, size = .data$tsize),
       vjust = 0.5, family = font_family, lineheight = 0.9
@@ -669,7 +674,8 @@ nmaplot <- function(x,
       geom_text(data = leg$text,
                 aes(x = .data$x, y = .data$y, label = .data$label,
                     fontface = .data$face, hjust = .data$hjust),
-                vjust = 0.5, size = legend_size / ggplot2::.pt,
+                vjust = 0.5,
+                size = legend_size * (if (leg$n_sec >= 4) 0.9 else 1) / ggplot2::.pt,
                 colour = label_color, family = font_family, lineheight = 0.9)
   }
 

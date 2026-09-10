@@ -115,8 +115,10 @@ NULL
 #'     treatment sits at the top and the others follow clockwise by
 #'     decreasing number of direct comparisons.}
 #'   \item{`layout = "star"`}{The reference treatment in the centre, the
-#'     others on a polygon around it. `reference` overrides the reference
-#'     group stored in the object.}
+#'     others on a polygon around it. The centre disc carries no label (no
+#'     room between the spokes); its name, n and share go to a "Centre node"
+#'     section of the legend. `reference` overrides the reference group
+#'     stored in the object.}
 #'   \item{a matrix}{Two columns, one row per treatment, row names = treatment
 #'     names: your own coordinates.}
 #' }

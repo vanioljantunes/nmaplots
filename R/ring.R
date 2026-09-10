@@ -80,7 +80,8 @@ resolve_ring_colors <- function(ring_colors, groups) {
 # the ring groups.
 build_legend <- function(nodes, edges, rings, ring_groups, size_label,
                          edge_width_range, ring_title, win, has_n, rc) {
-  n_sec <- 2 + !is.null(rings)
+  centre <- if (!is.null(nodes$in_legend) && any(nodes$in_legend)) nodes[which(nodes$in_legend)[1], ] else NULL
+  n_sec <- 2 + (!is.null(centre)) + (!is.null(rings))
   lim <- win$hw
   gap <- 0.04 * lim
   top <- win$ylim[1] - gap
@@ -101,6 +102,7 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
 
   # section 1: node size (two discs with their n, centred as a group)
   txt1 <- if (is.null(size_label)) "Node size" else size_label
+  txt1 <- sub("number of participants", "participants", txt1, fixed = TRUE)
   text[[1]] <- data.frame(x = cxs[1], y = ty, label = txt1,
                           face = "bold", hjust = 0.5, stringsAsFactors = FALSE)
   sc <- min(1, 0.075 * wsec / max(nodes$size))
@@ -133,7 +135,7 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
 
   # section 2: one line with the circled study count, centred as a group
   text[[4]] <- data.frame(x = cxs[2], y = ty,
-                          label = "Number in the circle = direct studies",
+                          label = "Circled number = direct studies",
                           face = "bold", hjust = 0.5, stringsAsFactors = FALSE)
   llen <- 0.34 * wsec
   grp2 <- llen + 0.03 * lim + 0.36 * wsec
@@ -150,9 +152,27 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
                           label = "studies comparing\nthe two treatments",
                           face = "plain", hjust = 0, stringsAsFactors = FALSE)
 
-  # section 3: ring groups, stacked and centred as a block
+  # section 3 (star layout): the centre node, described here instead of on the plot
+  isec <- 3
+  if (!is.null(centre)) {
+    text[[8]] <- data.frame(x = cxs[isec], y = ty, label = "Centre node = reference",
+                            face = "bold", hjust = 0.5, stringsAsFactors = FALSE)
+    rcen <- min(centre$size, 0.075 * wsec)
+    ctxt <- if (nzchar(centre$nline)) paste(centre$name, centre$nline, sep = "\n") else centre$name
+    grp3 <- 2 * rcen + 0.03 * lim + 0.45 * wsec
+    cx3 <- cxs[isec] - grp3 / 2 + rcen
+    c3 <- circle_poly(cx3, cy, rcen)
+    c3$id <- "L3"
+    c3$fill <- centre$fill
+    circles[[3]] <- c3
+    text[[9]] <- data.frame(x = cx3 + rcen + 0.03 * lim, y = cy, label = ctxt,
+                            face = "plain", hjust = 0, stringsAsFactors = FALSE)
+    isec <- 4
+  }
+
+  # ring groups, stacked and centred as a block
   if (!is.null(rings)) {
-    text[[6]] <- data.frame(x = cxs[3], y = ty, label = ring_title,
+    text[[6]] <- data.frame(x = cxs[isec], y = ty, label = ring_title,
                             face = "bold", hjust = 0.5, stringsAsFactors = FALSE)
     cols <- unique(rings[, c("group", "fill")])
     cols <- cols[match(ring_groups, cols$group), , drop = FALSE]
@@ -163,7 +183,7 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
     sq <- 0.028 * lim
     wtxt <- max(nchar(cols$group)) * 0.55 * 11 / 72 * (2 * lim) / 9
     blk <- 2 * sq + 0.03 * lim + wtxt
-    bx0 <- cxs[3] - blk / 2
+    bx0 <- cxs[isec] - blk / 2
     squares <- data.frame(xmin = bx0, xmax = bx0 + 2 * sq,
                           ymin = ys - sq, ymax = ys + sq, fill = cols$fill,
                           stringsAsFactors = FALSE)
@@ -174,5 +194,6 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
 
   list(boxes = boxes, dividers = dividers, circles = do.call(rbind, circles),
        lines = do.call(rbind, lines), dot = dot, dot_text = dot_text,
-       squares = squares, text = do.call(rbind, text), ylo = bottom - gap)
+       squares = squares, text = do.call(rbind, text), ylo = bottom - gap,
+       n_sec = n_sec)
 }
