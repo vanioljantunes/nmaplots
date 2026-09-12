@@ -13,7 +13,9 @@ funding source, anything you can count per treatment.
 
 When the network is binary (the \code{netmeta} object carries event counts) the
 ring is drawn without being asked for: each node shows its event rate,
-events over participants, with that percentage printed outside the ring.
+events over participants. The ring carries no percentage of its own: the
+event rate is in the node label (\verb{event/n = 21/50 (42\%)}) and the share of
+all participants is printed in bold inside the disc.
 \code{ring = FALSE} turns it off, and any \code{ring} of your own replaces it.
 }
 

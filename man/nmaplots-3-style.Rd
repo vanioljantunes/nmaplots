@@ -50,9 +50,11 @@ per study; \code{min_studies} hides comparisons with fewer studies.
 
 \section{Labels}{
 
-Treatment names are bold with \verb{n = ... (x\%)} underneath, the
-share being that treatment's participants over all arms (\code{show_n = FALSE}
-drops the line). Names longer than \code{label_wrap} characters
+Treatment names are bold with \verb{event/n = events/participants (x\%)}
+underneath on binary networks, \verb{x\%} being the event rate (\code{n = ...} when
+there are no events, \code{k = ...} without sample sizes; \code{show_n = FALSE}
+drops the line). The share of all participants is printed in bold inside
+each disc, in black or white, whichever contrasts with the fill. Names longer than \code{label_wrap} characters
 are wrapped. \code{labels} supplies display names (a named vector is safest).
 Labels sit outside the node, every row centred; \code{label_offset} moves them
 further out. \code{label_box = TRUE} draws a white container behind each label,

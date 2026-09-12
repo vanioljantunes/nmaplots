@@ -29,14 +29,19 @@ test_that("nmaplot returns a ggplot with node and edge data", {
   expect_equal(nrow(p$nmaplot$edges), length(unique(key)))
 })
 
-test_that("labels carry sample sizes when available", {
+test_that("labels carry events over sample size, share goes inside the node", {
   net <- make_net()
   p <- nmaplot(net)
-  expect_true(all(grepl("n = ", p$nmaplot$nodes$label)))
+  expect_true(all(grepl("event/n = ", p$nmaplot$nodes$label)))
   expect_equal(p$nmaplot$nodes$fill[p$nmaplot$nodes$trt == "A"], "#8A939B")
   p2 <- nmaplot(net, show_n = FALSE)
   expect_equal(p2$nmaplot$nodes$label, net$trts)
-  expect_true(all(grepl("\nn = .*[(][0-9]+%[)]", p$nmaplot$nodes$label)))
+  expect_true(all(grepl("\nevent/n = [0-9,]+/[0-9,]+ [(][0-9]+%[)]$",
+                        p$nmaplot$nodes$label)))
+  nd <- p$nmaplot$nodes
+  expect_equal(nd$share, round(100 * nd$n / sum(nd$n)))
+  i <- match(nd$trt, names(net$events.trts))
+  expect_equal(nd$events, unname(net$events.trts[i]))
   net2 <- make_net_no_n()
   p3 <- nmaplot(net2, label_wrap = NULL)
   expect_true(all(grepl("k = ", p3$nmaplot$nodes$label)))
@@ -137,7 +142,7 @@ test_that("custom labels keep the sample size suffix", {
   net <- make_net()
   p <- nmaplot(net, labels = c(A = "No contact", B = "Self-help",
                                C = "Individual", D = "Group"), label_wrap = NULL)
-  expect_true(all(grepl("^(No contact|Self-help|Individual|Group)\nn = ", p$nmaplot$nodes$label)))
+  expect_true(all(grepl("^(No contact|Self-help|Individual|Group)\nevent/n = ", p$nmaplot$nodes$label)))
   p2 <- nmaplot(net, labels = c("a", "b", "c", "d"), show_n = FALSE)
   expect_equal(p2$nmaplot$nodes$label, c("a", "b", "c", "d"))
   expect_error(nmaplot(net, labels = c("a", "b")), "one entry per treatment")
@@ -198,8 +203,8 @@ test_that("binary networks get an event-rate ring by default", {
   ev <- g$nmaplot$rings[g$nmaplot$rings$group == "Events", ]
   i <- match(ev$treatment, names(net$events.trts))
   expect_equal(ev$prop, unname(net$events.trts[i] / net$n.trts[i]), tolerance = 1e-8)
-  # only the event segment is labelled
-  expect_true(all(g$nmaplot$rings$show_pct == (g$nmaplot$rings$group == "Events")))
+  # the automatic ring prints no percentage (event rate is in the label)
+  expect_false(any(g$nmaplot$rings$show_pct))
   # ring = FALSE turns it off
   expect_null(nmaplot(net, ring = FALSE)$nmaplot$rings)
 })

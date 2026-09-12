@@ -1,5 +1,13 @@
 # nmaplots 0.3.0.9000
 
+* Node labels: binary networks show `event/n = 21/50 (42%)` under the
+  treatment name, the percentage being the event rate the ring draws; other
+  networks show `n = 50` (or `k = 3`). Each node's share of all patients is
+  printed in bold inside the disc, in black or white for contrast with the
+  fill. The event-rate ring no longer prints its percentage beside the ring.
+  The legend follows: its example disc carries the share inside, and the ring
+  group reads "Events (event/n)".
+
 * New `nma_clean()`: converts text columns that hold numbers, such as `TE` and
   `seTE` read back from a `write.csv2()` file (`"-0,684"`), to numeric. It
   reads decimal commas, drops thousands dots in `"1.234,5"`, and accepts the

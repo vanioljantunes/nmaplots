@@ -42,7 +42,10 @@
 #' proportional to the sample size, reference treatment in grey and the
 #' others in muted red, black edges whose width follows the number of direct
 #' studies with that number in a white circle on the edge, bold treatment name
-#' with `n = ... (x%)` underneath, centred title "Network of Interventions" with
+#' with `event/n = events/participants (event rate %)` underneath (`n = ...`
+#' without events, `k = ...` without sample sizes), each node's share of all
+#' participants printed in bold inside the disc, centred title
+#' "Network of Interventions" with
 #' the outcome as subtitle, and a boxed legend under the network.
 #'
 #' The result is a `ggplot`; `+` works as usual to add layers or change the
@@ -77,7 +80,9 @@ NULL
 #' @section The default ring:
 #' When the network is binary (the `netmeta` object carries event counts) the
 #' ring is drawn without being asked for: each node shows its event rate,
-#' events over participants, with that percentage printed outside the ring.
+#' events over participants. The ring carries no percentage of its own: the
+#' event rate is in the node label (`event/n = 21/50 (42%)`) and the share of
+#' all participants is printed in bold inside the disc.
 #' `ring = FALSE` turns it off, and any `ring` of your own replaces it.
 #'
 #' @section What to pass:
@@ -161,9 +166,11 @@ NULL
 #' `multiarm = TRUE` shades the polygon of each multi-arm trial.
 #'
 #' @section Labels:
-#' Treatment names are bold with `n = ... (x%)` underneath, the
-#' share being that treatment's participants over all arms (`show_n = FALSE`
-#' drops the line). Names longer than `label_wrap` characters
+#' Treatment names are bold with `event/n = events/participants (x%)`
+#' underneath on binary networks, `x%` being the event rate (`n = ...` when
+#' there are no events, `k = ...` without sample sizes; `show_n = FALSE`
+#' drops the line). The share of all participants is printed in bold inside
+#' each disc, in black or white, whichever contrasts with the fill. Names longer than `label_wrap` characters
 #' are wrapped. `labels` supplies display names (a named vector is safest).
 #' Labels sit outside the node, every row centred; `label_offset` moves them
 #' further out. `label_box = TRUE` draws a white container behind each label,

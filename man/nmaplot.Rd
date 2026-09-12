@@ -106,8 +106,11 @@ filled with \code{reference_fill}. Defaults to the reference group of the
 \item{labels}{Optional character vector of display names for the
 treatments, in the order of \code{x$trts} (or a named vector).}
 
-\item{show_n}{Logical. Print the sample size and its share of all
-randomised participants (\verb{n = 1,234 (18\%)}) under each treatment name. When the \code{netmeta} object has no sample sizes the number
+\item{show_n}{Logical. Print the counts under each treatment name, events
+over participants with the event rate on binary networks
+(\verb{event/n = 21/50 (42\%)}, \code{n = 50} without events), and each treatment's
+share of all randomised participants in bold inside its disc, in black or
+white for contrast. When the \code{netmeta} object has no sample sizes the number
 of studies is printed instead (\code{k = 4}).}
 
 \item{ring}{Subgroup composition drawn as a ring around each node. The

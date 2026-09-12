@@ -5,7 +5,7 @@
 #' object as [netmeta::netgraph()] (or a gemtc network, model or result) and
 #' renders it with \pkg{ggplot2}: node area by
 #' sample size, edge width and a circled count by number of studies, the
-#' treatment name and `n = ...` at every node, an optional outer ring per
+#' treatment name and `event/n = ...` at every node, share of patients inside the disc, an optional outer ring per
 #' node showing a subgroup composition (study design, risk of bias, region,
 #' anything you can count per treatment), a boxed legend under the network,
 #' and export to PNG, PDF or TIFF. Nothing statistical is recomputed; every

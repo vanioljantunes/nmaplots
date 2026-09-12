@@ -82,7 +82,8 @@ resolve_ring_colors <- function(ring_colors, groups) {
 # and a lighter descriptor.
 build_legend <- function(nodes, edges, rings, ring_groups, size_label,
                          edge_width_range, ring_title, win, has_n, rc,
-                         ring_name = NULL, reference_fill = "#8A939B") {
+                         ring_name = NULL, reference_fill = "#8A939B",
+                         auto_ring = FALSE) {
   centre <- if (!is.null(nodes$in_legend) && any(nodes$in_legend)) nodes[which(nodes$in_legend)[1], ] else NULL
   n_sec <- 2 + (!is.null(centre)) + (!is.null(rings))
   lim <- win$hw
@@ -130,12 +131,11 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
   pre <- if (isTRUE(has_n)) "n = " else "k = "
   big <- if (!is.null(nodes$size_driver)) max(nodes$size_driver) else NA
   lab_big <- if (!is.na(big)) {
-    if (by_patients)
-      paste0(pre, format_int(big), " (",
-             round(100 * big / sum(nodes$size_driver, na.rm = TRUE)), "%)")
+    if (by_patients) paste0(pre, format_int(big), " patients")
     else paste0(pre, format_int(big))
   } else "largest node"
-  note <- if (by_patients) "% of all patients" else "largest node in the network"
+  note <- if (by_patients) "% inside: share of\nall patients" else
+    "largest node in the network"
   grp <- 2 * rex1 + 0.03 * lim + 0.44 * wsec
   cx1 <- cxs[1] - grp / 2 + rex1
   c1 <- circle_poly(cx1, cy, rex1)
@@ -143,6 +143,12 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
   c1$fill <- "#C9CDD2"
   circles[[1]] <- c1
   text[[2]] <- item(cx1 + rex1 + 0.03 * lim, cy, paste0(lab_big, "\n", note))
+  # the example disc carries its share inside, as the plot's nodes do
+  inside <- if (by_patients && !is.na(big)) {
+    data.frame(x = cx1, y = cy,
+               label = paste0(round(100 * big / sum(nodes$size_driver, na.rm = TRUE)), "%"),
+               colour = contrast_text(c1$fill[1]), stringsAsFactors = FALSE)
+  } else NULL
 
   # section 2: one line with the circled study count
   text[[3]] <- hdr(2, "Circled number", "Direct studies")
@@ -189,7 +195,10 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
     ys <- cy + (k - 1) * step / 2 - (seq_len(k) - 1) * step
     sq <- 0.028 * lim
     rex <- 0.06 * wsec
-    wtxt <- max(nchar(cols$group)) * 0.55 * 11 / 72 * (2 * lim) / 9
+    # automatic ring: the Events colour is the event/n count of the labels
+    glab <- if (isTRUE(auto_ring))
+      ifelse(cols$group == "Events", "Events (event/n)", cols$group) else cols$group
+    wtxt <- max(nchar(glab)) * 0.55 * 11 / 72 * (2 * lim) / 9
     blk <- 2 * rex * 1.5 + 0.06 * lim + 2 * sq + 0.03 * lim + wtxt
     bx0 <- cxs[isec] - blk / 2
     ex_c <- circle_poly(bx0 + rex * 1.5, cy, rex)
@@ -208,12 +217,13 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
                           ymin = ys - sq, ymax = ys + sq, fill = cols$fill,
                           stringsAsFactors = FALSE)
     text[[8]] <- data.frame(x = sx0 + 2 * sq + 0.03 * lim, y = ys,
-                            label = cols$group, face = "plain", hjust = 0, sz = 1,
+                            label = glab, face = "plain", hjust = 0, sz = 1,
                             stringsAsFactors = FALSE)
   }
 
   list(boxes = boxes, headers = headers, dividers = dividers,
        circles = do.call(rbind, circles), lines = do.call(rbind, lines),
        dot = dot, dot_text = dot_text, squares = squares, ringex = ringex,
-       text = do.call(rbind, text), ylo = bottom - gap, n_sec = n_sec)
+       text = do.call(rbind, text), inside = inside, ylo = bottom - gap,
+       n_sec = n_sec)
 }

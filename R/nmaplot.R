@@ -37,8 +37,11 @@
 #'   `netmeta` object.
 #' @param labels Optional character vector of display names for the
 #'   treatments, in the order of `x$trts` (or a named vector).
-#' @param show_n Logical. Print the sample size and its share of all
-#'   randomised participants (`n = 1,234 (18%)`) under each treatment name. When the `netmeta` object has no sample sizes the number
+#' @param show_n Logical. Print the counts under each treatment name, events
+#'   over participants with the event rate on binary networks
+#'   (`event/n = 21/50 (42%)`, `n = 50` without events), and each treatment's
+#'   share of all randomised participants in bold inside its disc, in black or
+#'   white for contrast. When the `netmeta` object has no sample sizes the number
 #'   of studies is printed instead (`k = 4`).
 #' @param ring Subgroup composition drawn as a ring around each node. The
 #'   default (`NULL`) draws the event rate of every treatment when the network
@@ -354,8 +357,9 @@ nmaplot <- function(x,
       ring_cols <- resolve_ring_colors(ring_colors, ring_groups)
       rings <- rg$data
       rings$fill <- unname(ring_cols[rings$group])
-      # the automatic ring prints one percentage: the event rate
-      if (auto_ring) rings$show_pct <- rings$group == "Events"
+      # the automatic ring prints no percentage: the event rate is in the
+      # node label (event/n) and the share of patients inside the disc
+      if (auto_ring) rings$show_pct <- FALSE
     }
   }
   nodes$has_ring <- if (!is.null(rings)) nodes$trt %in% rings$treatment else FALSE
@@ -395,10 +399,17 @@ nmaplot <- function(x,
   }
   if (!is.null(label_wrap)) name <- wrap_labels(name, label_wrap)
   nodes$name <- name
+  # share of all participants: printed inside the node disc
+  nodes$share <- if (net$has.n) round(100 * nodes$n / sum(nodes$n, na.rm = TRUE)) else
+    rep(NA_real_, n_trt)
+  nodes$events <- unname(net$e.trts[trts])
   nodes$nline <- if (isTRUE(show_n)) {
-    if (net$has.n) {
-      share <- round(100 * nodes$n / sum(nodes$n, na.rm = TRUE))
-      paste0("n = ", format_int(nodes$n), " (", share, "%)")
+    if (net$has.n && net$has.events) {
+      rate <- ifelse(nodes$n > 0, round(100 * nodes$events / nodes$n), 0)
+      paste0("event/n = ", format_int(nodes$events), "/", format_int(nodes$n),
+             " (", rate, "%)")
+    } else if (net$has.n) {
+      paste0("n = ", format_int(nodes$n))
     } else paste0("k = ", nodes$k)
   } else ""
   nodes$label <- ifelse(nzchar(nodes$nline), paste0(nodes$name, "\n", nodes$nline),
@@ -414,7 +425,7 @@ nmaplot <- function(x,
   ux <- cos(ang)
   uy <- sin(ang)
   # percent labels sit just outside the ring; the name goes beyond them
-  pct_pad <- if (!is.null(rings) && isTRUE(ring_labels)) 0.045 else 0
+  pct_pad <- if (!is.null(rings) && isTRUE(ring_labels) && any(rings$show_pct)) 0.045 else 0
   off <- nodes$r_out + ifelse(nodes$has_ring, pct_pad, 0) + label_offset
   nodes$lx <- nodes$x + ux * off
   nodes$ly <- nodes$y + uy * off
@@ -504,7 +515,8 @@ nmaplot <- function(x,
     leg <- build_legend(nodes, edges, rings, ring_groups, size_label,
                         edge_width_range, ring_title, win, has_n = net$has.n,
                         rc = edge_label_size * 0.95 / 72 * upi,
-                        ring_name = ring_name, reference_fill = reference_fill)
+                        ring_name = ring_name, reference_fill = reference_fill,
+                        auto_ring = auto_ring)
     ylo <- leg$ylo
   }
 
@@ -610,6 +622,41 @@ nmaplot <- function(x,
     data = discs, aes(x = .data$x, y = .data$y, group = .data$id, fill = .data$fill),
     colour = node_color, linewidth = node_stroke
   )
+
+  # share of all participants, bold inside each disc in a contrasting colour,
+  # shrunk to fit small discs (dropped when it would be unreadable)
+  nodes$share_pt <- NA_real_
+  if (net$has.n && isTRUE(show_n)) {
+    txt <- paste0(nodes$share, "%")
+    # text width in em for a bold serif: digits ~0.55 em, "%" ~0.9 em; keep
+    # the string inside 1.45 radii so it clears the white disc border
+    em <- (nchar(txt) - 1) * 0.55 + 0.9
+    # scale of the final drawing: legend included, title and subtitle lines
+    # off the panel height, plus a 10% margin (`upi` above is a first guess
+    # made before the legend and subtitle take their space)
+    sub_lines <- if (is.null(subtitle)) 0 else
+      length(strsplit(subtitle, "\n", fixed = TRUE)[[1]])
+    panel_h_txt <- max(panel_h - 0.3 * sub_lines, 1)
+    upi_txt <- 1.1 * max(diff(win$xlim) / panel_w,
+                         (win$ylim[2] - ylo) / panel_h_txt)
+    fit_w <- 1.45 * nodes$size * 72 / (em * upi_txt)
+    fit_h <- 1.2 * nodes$size * 72 / upi_txt
+    ok <- !nodes$inside & !is.na(nodes$share)
+    nodes$share_pt[ok] <- pmin(label_size * 0.95, fit_w, fit_h)[ok]
+    sh <- nodes[ok & nodes$share_pt >= 4, , drop = FALSE]
+    if (nrow(sh)) {
+      sh$txt <- paste0(sh$share, "%")
+      sh$pt <- sh$share_pt
+      sh$col <- contrast_text(sh$fill)
+      sh$psize <- sh$pt / ggplot2::.pt
+      p <- p + geom_text(
+        data = sh,
+        aes(x = .data$x, y = .data$y, label = .data$txt,
+            colour = .data$col, size = .data$psize),
+        hjust = 0.5, vjust = 0.5, fontface = "bold", family = font_family
+      )
+    }
+  }
 
   # edge labels
   if (nrow(edges) && isTRUE(edge_labels)) {
@@ -743,6 +790,13 @@ nmaplot <- function(x,
                          aes(xmin = .data$xmin, xmax = .data$xmax, ymin = .data$ymin,
                              ymax = .data$ymax, fill = .data$fill),
                          colour = "white", linewidth = 0.3)
+    }
+    if (!is.null(leg$inside) && nrow(leg$inside)) {
+      p <- p + geom_text(data = leg$inside,
+                         aes(x = .data$x, y = .data$y, label = .data$label,
+                             colour = .data$colour),
+                         size = legend_size * 0.9 / ggplot2::.pt, fontface = "bold",
+                         hjust = 0.5, vjust = 0.5, family = font_family)
     }
     p <- p +
       geom_text(data = leg$text,

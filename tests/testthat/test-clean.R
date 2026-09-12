@@ -24,7 +24,7 @@ test_that("recurrence example: pairwise rows with decimal commas plot and fit", 
   g <- nmaplot(d)
   expect_s3_class(g, "ggplot")
   expect_equal(nrow(g$nmaplot$nodes), 11)
-  expect_true(all(grepl("n = ", g$nmaplot$nodes$label)))
+  expect_true(all(grepl("event/n = ", g$nmaplot$nodes$label)))
   expect_setequal(unique(g$nmaplot$rings$group), c("Events", "No event"))
 
   skip_if_not_installed("netmeta")
