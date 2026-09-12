@@ -42,3 +42,42 @@ nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
 nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
         outcome = "Fibrosis improvement without worsening of MASH", layout = "star")
 ```
+
+```{r defante, fig.width = 10, fig.height = 10.5, dpi = 150, out.width = "100%"}
+# nmaplot() is laid out for a ~10 x 10.5 in page: text sizes are fixed in
+# points, so a smaller figure squeezes the network under the labels. The chunk
+# options above set that size for the notebook preview; maximising the output
+# window only enlarges the bitmap. For the Plots pane use
+# "Chunk Output in Console" (gear icon), where the plot is redrawn on resize.
+unloadNamespace("nmaplots")
+# install.packages("remotes")
+remotes::install_github("vanioljantunes/nmaplots")
+library(netmeta)
+library(nmaplots)
+library(readxl)
+
+
+myfile <- rstudioapi::selectFile()
+
+# take sheet names from excel file selected
+  sheet_names <- excel_sheets(myfile)
+
+  # create a list called ma where the data sets will be saved and named according sheet names
+  ma <- lapply(sheet_names, function(x) {as.data.frame(read_excel(myfile, sheet = x))})
+
+  # name the objects inside the list with the sheet names
+  names(ma) <- sheet_names
+  
+  d <- ma$rec_pat
+p <- meta::pairwise(treat = treatment, event = responders, n = sampleSize,
+              studlab = study, data = d, sm = "RR")
+net <- netmeta(p)
+
+# Same input as netgraph(net). Title is centred; the outcome becomes the subtitle.
+nmaplot(net, outcome = "X")
+
+# Outer ring from a column of the data: one label per study arm, counted per
+# treatment. Here study design (RCT / PSM), but any categorical column works.
+nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+        outcome = "Fibrosis improvement without worsening of MASH")
+```
