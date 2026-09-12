@@ -8,3 +8,4 @@
 ^inst/examples/.*\.nb\.html$
 ^inst/examples/smoking$
 ^data-raw$
+^tutorial$

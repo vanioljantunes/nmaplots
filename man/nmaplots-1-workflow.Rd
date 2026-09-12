@@ -7,6 +7,48 @@
 \code{nmaplots} draws what \pkg{netmeta} already computed. Fit the network
 meta-analysis as usual, hand the object to \code{\link[=nmaplot]{nmaplot()}}, and save.
 }
+\section{Tutorial, from an Excel sheet}{
+
+\if{html}{\figure{tutorial.png}{options: width="100\%" alt="nmaplots tutorial"}}
+\enumerate{
+\item Prepare packages:
+}
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{install.packages(c("remotes", "netmeta", "rstudioapi", "readxl"))
+remotes::install_github("vanioljantunes/nmaplots")
+library(nmaplots); library(netmeta); library(rstudioapi); library(readxl)
+}\if{html}{\out{</div>}}
+\enumerate{
+\item Load the data. Each sheet holds one outcome with one row per study arm:
+\code{study}, \code{treatment}, \code{responders}, \code{sampleSize}.
+}
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{myfile <- selectFile()
+sheet_names <- excel_sheets(myfile)
+ma <- lapply(sheet_names, function(x)
+  as.data.frame(read_excel(myfile, sheet = x)))
+names(ma) <- sheet_names
+sheet <- select.list(sheet_names, title = "Which sheet?")
+d <- ma[[sheet]]            # same as ma$rec_pat_all
+}\if{html}{\out{</div>}}
+\enumerate{
+\item Run \code{pairwise()}, give its result to \code{netmeta()}, and plot that:
+}
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{p <- pairwise(treat = treatment, event = responders, n = sampleSize,
+              studlab = study, data = d, sm = "RR")
+net <- netmeta(p)           # the pairwise object, not d
+nmaplot(net, outcome = "Patient recurrence", layout = "multi",
+        node_fill = "#A94A47", reference_fill = "#8A939B",
+        ring_colors = c(Events = "#4E7CA8", "No event" = "#DFE3E7"))
+}\if{html}{\out{</div>}}
+
+\code{outcome} is the subtitle; \code{layout} is \code{"multi"}, \code{"circle"} or \code{"star"};
+\code{node_fill} colours the treatments and \code{reference_fill} the reference;
+\code{ring_colors} names one colour per ring group. \code{netmeta(d)} instead of
+\code{netmeta(p)} stops with "Non-numeric value for argument 'TE'".
+}
+
 \section{Step 1, fit the network meta-analysis}{
 
 

@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>nmaplots tutorial</title>
+<style>
+  :root {
+    --navy: #1F2A44;
+    --red: #A94A47;
+    --blue: #4E7CA8;
+    --grey: #8A939B;
+    --ring-light: #DFE3E7;
+    --band: #EDEFF2;
+    --line: #C5C9CE;
+    --paper: #FFFFFF;
+    --page: #F4F1EC;
+    --muted: #5B6475;
+    --code-bg: #F7F8FA;
+    --serif: Georgia, "Times New Roman", Times, serif;
+    --sans: "Segoe UI", Arial, Helvetica, sans-serif;
+    --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--navy); font-family: var(--sans); }
+  .sheet { width: 1200px; margin: 20px auto; background: var(--paper);
+           border: 1px solid var(--line); }
+
+  header { padding: 38px 48px 30px; text-align: center; border-bottom: 1px solid var(--line); }
+  header h1 { font-family: var(--serif); font-size: 40px; margin: 0 0 6px; letter-spacing: 0.2px; }
+  header p { margin: 0; font-family: var(--serif); font-size: 19px; color: var(--muted); }
+  .flow { display: flex; justify-content: center; align-items: center; gap: 14px;
+          margin-top: 22px; font-family: var(--serif); font-size: 16px; }
+  .flow .pill { border: 1px solid var(--line); background: var(--band); padding: 5px 14px;
+                border-radius: 999px; }
+  .flow .arrow { color: var(--grey); font-size: 18px; }
+
+  section.step { padding: 30px 48px 34px; border-bottom: 1px solid var(--line); }
+  section.step:last-of-type { border-bottom: none; }
+  .step-head { display: flex; align-items: center; gap: 16px; margin-bottom: 18px;
+               background: var(--band); margin-left: -48px; margin-right: -48px;
+               padding: 12px 48px; }
+  .num { width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--navy);
+         background: #fff; display: flex; align-items: center; justify-content: center;
+         font-weight: 700; font-size: 20px; font-family: var(--sans); flex: none; }
+  .step-head h2 { font-family: var(--serif); font-size: 26px; margin: 0; }
+  .step-head span { font-family: var(--serif); color: var(--muted); font-size: 16px; margin-left: 4px; }
+
+  .grid { display: grid; gap: 26px; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3-2 { grid-template-columns: 1.08fr 0.92fr; }
+  h3 { font-family: var(--serif); font-size: 18px; margin: 0 0 10px; }
+  p.note { font-size: 14.5px; line-height: 1.5; color: var(--muted); margin: 8px 0 0; }
+
+  pre.code { margin: 0; background: var(--code-bg); border: 1px solid var(--line);
+             border-left: 4px solid var(--navy); padding: 14px 16px; font-family: var(--mono);
+             font-size: 14px; line-height: 1.55; color: var(--navy); white-space: pre; }
+  .c { color: #7A8391; font-style: italic; }
+  .f { color: var(--navy); font-weight: 700; }
+  .s { color: var(--red); }
+  .a { color: var(--blue); }
+  .k { color: #6B4FA0; }
+
+  .pkgs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .pkg { border: 1px solid var(--line); padding: 12px 14px; }
+  .pkg b { font-family: var(--mono); font-size: 15px; display: block; margin-bottom: 4px; }
+  .pkg span { font-size: 13.5px; color: var(--muted); line-height: 1.4; }
+  .pkg.main { border-color: var(--red); box-shadow: inset 4px 0 0 var(--red); }
+
+  table.tpl { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  table.tpl th { background: var(--navy); color: #fff; font-family: var(--mono); font-weight: 600;
+                 padding: 7px 10px; text-align: left; font-size: 14px; }
+  table.tpl td { padding: 6px 10px; border-bottom: 1px solid var(--band); }
+  table.tpl td.n { text-align: right; font-family: var(--mono); }
+  table.tpl tr.gap td { border-bottom: 2px solid var(--line); }
+  .cols { margin-top: 12px; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px;
+          font-size: 13.5px; }
+  .cols code { font-family: var(--mono); color: var(--navy); font-weight: 700; }
+  .cols span { color: var(--muted); }
+
+  .console { margin-top: 12px; background: #fff; border: 1px dashed var(--grey);
+             padding: 10px 14px; font-family: var(--mono); font-size: 13.5px; line-height: 1.5; }
+  .console .t { color: var(--muted); }
+  .console .pick { background: #FFF4CC; }
+
+  .plotcard { border: 1px solid var(--line); padding: 8px; background: #fff; margin: 0; }
+  .plotcard img { width: 100%; display: block; }
+  .plotcard figcaption { font-family: var(--serif); font-size: 13.5px; color: var(--muted);
+                         text-align: center; padding-top: 6px; }
+
+  .args { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 26px; }
+  .card { border: 1px solid var(--line); }
+  .card .hd { background: var(--band); padding: 9px 12px; }
+  .card .hd b { font-family: var(--serif); font-size: 17px; display: block; }
+  .card .hd code { font-family: var(--mono); font-size: 13px; color: var(--blue); }
+  .card .bd { padding: 12px; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
+  .card .bd code { font-family: var(--mono); color: var(--navy); font-size: 12.5px; }
+  .layouts { display: flex; justify-content: space-between; margin: 4px 0 8px; }
+  .layouts figure { margin: 0; text-align: center; font-family: var(--mono); font-size: 12px; color: var(--navy); }
+  .sw { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff;
+         box-shadow: 0 0 0 1px var(--line); flex: none; }
+  .yellow { color: #B8860B; font-weight: 700; }
+
+  .pitfall { margin-top: 18px; display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .pit { border: 1px solid var(--line); border-left: 4px solid var(--red); padding: 10px 14px;
+         font-size: 14px; line-height: 1.45; }
+  .pit b { font-family: var(--serif); font-size: 15.5px; display: block; margin-bottom: 3px; }
+  .pit code { font-family: var(--mono); font-size: 13px; color: var(--navy); }
+  footer { text-align: center; padding: 14px; font-family: var(--serif); font-size: 13.5px;
+           color: var(--muted); border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header>
+    <h1>nmaplots tutorial</h1>
+    <p>From an Excel sheet to a publication-ready network plot in three steps</p>
+    <div class="flow">
+      <span class="pill">Excel sheet</span><span class="arrow">&rarr;</span>
+      <span class="pill">pairwise()</span><span class="arrow">&rarr;</span>
+      <span class="pill">netmeta()</span><span class="arrow">&rarr;</span>
+      <span class="pill">nmaplot()</span>
+    </div>
+  </header>
+
+  <!-- STEP 1 -->
+  <section class="step">
+    <div class="step-head"><div class="num">1</div><h2>Prepare packages</h2><span>install once, load every session</span></div>
+    <div class="grid g2">
+      <pre class="code"><span class="c"># install once</span>
+<span class="f">install.packages</span>(<span class="k">c</span>(<span class="s">"remotes"</span>, <span class="s">"netmeta"</span>, <span class="s">"rstudioapi"</span>, <span class="s">"readxl"</span>))
+remotes::<span class="f">install_github</span>(<span class="s">"vanioljantunes/nmaplots"</span>)
+
+<span class="c"># load every session</span>
+<span class="f">library</span>(nmaplots)
+<span class="f">library</span>(netmeta)
+<span class="f">library</span>(rstudioapi)
+<span class="f">library</span>(readxl)</pre>
+      <div>
+        <div class="pkgs">
+          <div class="pkg main"><b>nmaplots</b><span>draws the network: <code>nmaplot()</code></span></div>
+          <div class="pkg"><b>netmeta</b><span><code>pairwise()</code> and <code>netmeta()</code> fit the model</span></div>
+          <div class="pkg"><b>rstudioapi</b><span><code>selectFile()</code> opens a file picker</span></div>
+          <div class="pkg"><b>readxl</b><span>reads the sheets of the Excel file</span></div>
+        </div>
+        <p class="note">Updating nmaplots in an open session? Run
+          <code>unloadNamespace("nmaplots")</code> before <code>install_github()</code>,
+          then <code>library(nmaplots)</code> again, so the new version is the one in use.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step">
+    <div class="step-head"><div class="num">2</div><h2>Load the data</h2><span>one sheet per outcome, one row per study arm</span></div>
+    <div class="grid g3-2">
+      <div>
+        <h3>Template: how each sheet should look</h3>
+        <table class="tpl">
+          <thead><tr><th>study</th><th>treatment</th><th>responders</th><th>sampleSize</th></tr></thead>
+          <tbody>
+            <tr><td>Author A 2006</td><td>Drug_A</td><td class="n">11</td><td class="n">27</td></tr>
+            <tr class="gap"><td>Author A 2006</td><td>Placebo</td><td class="n">21</td><td class="n">26</td></tr>
+            <tr><td>Author B 2010</td><td>Drug_B</td><td class="n">13</td><td class="n">121</td></tr>
+            <tr><td>Author B 2010</td><td>Drug_C</td><td class="n">20</td><td class="n">113</td></tr>
+            <tr class="gap"><td>Author B 2010</td><td>Placebo</td><td class="n">3</td><td class="n">19</td></tr>
+            <tr><td>Author C 2014</td><td>Drug_A</td><td class="n">58</td><td class="n">149</td></tr>
+            <tr><td>Author C 2014</td><td>Drug_C</td><td class="n">73</td><td class="n">140</td></tr>
+          </tbody>
+        </table>
+        <div class="cols">
+          <code>study</code><span>same label on every arm of a trial (three rows = three-arm trial)</span>
+          <code>treatment</code><span>arm name; keep spelling identical across studies</span>
+          <code>responders</code><span>participants with the event (whole numbers)</span>
+          <code>sampleSize</code><span>participants randomised to the arm</span>
+        </div>
+        <p class="note">Extra columns (year, dose, notes) are fine. Every study needs at least two arms,
+          and all treatments must connect into one network.</p>
+      </div>
+      <div>
+        <h3>Pick the file, then the sheet</h3>
+        <pre class="code"><span class="c"># opens a file picker in RStudio</span>
+myfile &lt;- <span class="f">selectFile</span>()
+
+<span class="c"># read every sheet into a list named ma</span>
+sheet_names &lt;- <span class="f">excel_sheets</span>(myfile)
+ma &lt;- <span class="f">lapply</span>(sheet_names, <span class="k">function</span>(x)
+  <span class="f">as.data.frame</span>(<span class="f">read_excel</span>(myfile, <span class="a">sheet</span> = x)))
+<span class="f">names</span>(ma) &lt;- sheet_names
+
+<span class="c"># choose the outcome sheet</span>
+sheet &lt;- <span class="f">select.list</span>(sheet_names, <span class="a">title</span> = <span class="s">"Which sheet?"</span>)
+d &lt;- ma[[sheet]]      <span class="c"># same as ma$rec_pat_all</span></pre>
+        <div class="console">
+          <div class="t">Which sheet?</div>
+          <div>1: Treatments</div>
+          <div class="pick">2: rec_pat_all</div>
+          <div>3: rec_pat</div>
+          <div>4: cle_les_all ...</div>
+          <div class="t">Selection: 2</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step">
+    <div class="step-head"><div class="num">3</div><h2>Run nmaplot()</h2><span>pairwise &rarr; netmeta &rarr; nmaplot</span></div>
+    <div class="grid g2">
+      <div>
+        <pre class="code"><span class="c"># a. arm rows -> one row per comparison</span>
+p &lt;- <span class="f">pairwise</span>(<span class="a">treat</span> = treatment, <span class="a">event</span> = responders,
+              <span class="a">n</span> = sampleSize, <span class="a">studlab</span> = study,
+              <span class="a">data</span> = d, <span class="a">sm</span> = <span class="s">"RR"</span>)
+
+<span class="c"># b. fit the network meta-analysis on p</span>
+net &lt;- <span class="f">netmeta</span>(p)
+
+<span class="c"># c. draw it</span>
+<span class="f">nmaplot</span>(net,
+        <span class="a">outcome</span>        = <span class="s">"Patient recurrence"</span>,
+        <span class="a">layout</span>         = <span class="s">"multi"</span>,
+        <span class="a">node_fill</span>      = <span class="s">"#A94A47"</span>,
+        <span class="a">reference_fill</span> = <span class="s">"#8A939B"</span>,
+        <span class="a">ring_colors</span>    = <span class="k">c</span>(Events = <span class="s">"#4E7CA8"</span>,
+                           <span class="s">"No event"</span> = <span class="s">"#DFE3E7"</span>))
+
+<span class="c"># d. save for the paper</span>
+<span class="f">nmaplot</span>(net, <span class="a">outcome</span> = <span class="s">"Patient recurrence"</span>,
+        <span class="a">file</span> = <span class="s">"network.png"</span>,
+        <span class="a">width</span> = <span class="k">10</span>, <span class="a">height</span> = <span class="k">10.5</span>, <span class="a">dpi</span> = <span class="k">300</span>)</pre>
+        <div class="pitfall">
+          <div class="pit"><b>Give netmeta() the pairwise object</b>
+            <code>netmeta(p)</code>, not <code>netmeta(d)</code>. Passing the sheet itself stops with
+            <code>Non-numeric value for argument 'TE'</code>.</div>
+          <div class="pit"><b>Numbers with decimal commas?</b>
+            A sheet saved as <code>"-0,684"</code> reads as text. <code>nma_clean(d)</code> converts it;
+            <code>nmaplot()</code> also accepts pairwise rows directly.</div>
+        </div>
+      </div>
+      <figure class="plotcard">
+        <img src="../man/figures/tutorial-plot.png" alt="Network plot drawn by nmaplot()">
+        <figcaption>Result: node area = participants, % inside = share of all patients,
+          event/n under each name, circled number = direct studies, ring = event rate</figcaption>
+      </figure>
+    </div>
+
+    <div class="args">
+      <div class="card">
+        <div class="hd"><b>Outcome</b><code>outcome = "X"</code></div>
+        <div class="bd">Text of the subtitle under the title. Write the outcome in words,
+          e.g. <code>"Patient recurrence"</code>. The line below it (studies, treatments,
+          patients, events) is added automatically; <code>summary_line = FALSE</code> hides it.
+          <code>title</code> changes "Network of Interventions".</div>
+      </div>
+      <div class="card">
+        <div class="hd"><b>Layout</b><code>layout = "multi"</code></div>
+        <div class="bd">
+          <div class="layouts">
+            <figure>
+              <svg width="68" height="60" viewBox="0 0 68 60">
+                <g stroke="#1F2A44" stroke-width="1"><line x1="34" y1="8" x2="58" y2="26"/><line x1="58" y1="26" x2="49" y2="52"/><line x1="49" y1="52" x2="19" y2="52"/><line x1="19" y1="52" x2="10" y2="26"/><line x1="10" y1="26" x2="34" y2="8"/><line x1="34" y1="8" x2="49" y2="52"/></g>
+                <g fill="#A94A47" stroke="#fff"><circle cx="34" cy="8" r="6"/><circle cx="58" cy="26" r="5"/><circle cx="49" cy="52" r="7"/><circle cx="19" cy="52" r="5"/><circle cx="10" cy="26" r="6"/></g>
+              </svg><figcaption>"multi"</figcaption></figure>
+            <figure>
+              <svg width="68" height="60" viewBox="0 0 68 60">
+                <circle cx="34" cy="30" r="23" fill="none" stroke="#D5D8DC" stroke-dasharray="3 2"/>
+                <g stroke="#1F2A44" stroke-width="1"><line x1="34" y1="7" x2="56" y2="37"/><line x1="34" y1="7" x2="12" y2="37"/><line x1="34" y1="7" x2="34" y2="53"/><line x1="56" y1="37" x2="12" y2="37"/></g>
+                <g fill="#A94A47" stroke="#fff"><circle cx="34" cy="7" r="7"/><circle cx="56" cy="37" r="5"/><circle cx="34" cy="53" r="5"/><circle cx="12" cy="37" r="6"/></g>
+              </svg><figcaption>"circle"</figcaption></figure>
+            <figure>
+              <svg width="68" height="60" viewBox="0 0 68 60">
+                <g stroke="#1F2A44" stroke-width="1"><line x1="34" y1="30" x2="34" y2="6"/><line x1="34" y1="30" x2="58" y2="22"/><line x1="34" y1="30" x2="50" y2="54"/><line x1="34" y1="30" x2="18" y2="54"/><line x1="34" y1="30" x2="10" y2="22"/></g>
+                <g fill="#A94A47" stroke="#fff"><circle cx="34" cy="6" r="5"/><circle cx="58" cy="22" r="5"/><circle cx="50" cy="54" r="5"/><circle cx="18" cy="54" r="5"/><circle cx="10" cy="22" r="5"/></g>
+                <circle cx="34" cy="30" r="8" fill="#8A939B" stroke="#fff"/>
+              </svg><figcaption>"star"</figcaption></figure>
+          </div>
+          <code>"multi"</code> polygon (default), <code>"circle"</code> ordered by connections,
+          <code>"star"</code> reference in the centre (<code>reference = "Placebo"</code>).</div>
+      </div>
+      <div class="card">
+        <div class="hd"><b>Node colours</b><code>node_fill, reference_fill</code></div>
+        <div class="bd">
+          <div class="sw"><span class="dot" style="background:#A94A47"></span><span><code>node_fill</code> every treatment</span></div>
+          <div class="sw"><span class="dot" style="background:#8A939B"></span><span><code>reference_fill</code> reference</span></div>
+          <div class="sw"><span class="dot" style="background:#E4572E"></span><span><code>highlight</code> + <code>highlight_color</code></span></div>
+          Any R colour or hex. <code>node_fill = "auto"</code> gives one colour per treatment from
+          <code>palette</code>. The % inside turns <span class="yellow">yellow</span> on dark fills.</div>
+      </div>
+      <div class="card">
+        <div class="hd"><b>Outer ring colours</b><code>ring_colors</code></div>
+        <div class="bd">
+          <div class="sw">
+            <svg width="30" height="30" viewBox="0 0 30 30">
+              <circle cx="15" cy="15" r="12" fill="none" stroke="#DFE3E7" stroke-width="5"/>
+              <path d="M15 3 A12 12 0 0 1 26.4 18.7" fill="none" stroke="#4E7CA8" stroke-width="5"/>
+              <circle cx="15" cy="15" r="7.5" fill="#A94A47"/>
+            </svg>
+            <span><code>Events</code> / <code>"No event"</code></span></div>
+          A named vector, names = ring groups:
+          <code>c(Events = "#4E7CA8", "No event" = "#DFE3E7")</code>.
+          A custom ring (e.g. <code>ring = table(d$treatment, d$design)</code>) takes one colour
+          per group; <code>ring = FALSE</code> removes it.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>nmaplots &middot; github.com/vanioljantunes/nmaplots &middot; help pages: <code>?nmaplot</code>, <code>?nmaplots-1-workflow</code></footer>
+</div>
+</body>
+</html>

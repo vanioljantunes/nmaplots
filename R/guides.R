@@ -6,6 +6,40 @@
 #' `nmaplots` draws what \pkg{netmeta} already computed. Fit the network
 #' meta-analysis as usual, hand the object to [nmaplot()], and save.
 #'
+#' @section Tutorial, from an Excel sheet:
+#' \if{html}{\figure{tutorial.png}{options: width="100\%" alt="nmaplots tutorial"}}
+#'
+#' 1. Prepare packages:
+#' ```r
+#' install.packages(c("remotes", "netmeta", "rstudioapi", "readxl"))
+#' remotes::install_github("vanioljantunes/nmaplots")
+#' library(nmaplots); library(netmeta); library(rstudioapi); library(readxl)
+#' ```
+#' 2. Load the data. Each sheet holds one outcome with one row per study arm:
+#'    `study`, `treatment`, `responders`, `sampleSize`.
+#' ```r
+#' myfile <- selectFile()
+#' sheet_names <- excel_sheets(myfile)
+#' ma <- lapply(sheet_names, function(x)
+#'   as.data.frame(read_excel(myfile, sheet = x)))
+#' names(ma) <- sheet_names
+#' sheet <- select.list(sheet_names, title = "Which sheet?")
+#' d <- ma[[sheet]]            # same as ma$rec_pat_all
+#' ```
+#' 3. Run `pairwise()`, give its result to `netmeta()`, and plot that:
+#' ```r
+#' p <- pairwise(treat = treatment, event = responders, n = sampleSize,
+#'               studlab = study, data = d, sm = "RR")
+#' net <- netmeta(p)           # the pairwise object, not d
+#' nmaplot(net, outcome = "Patient recurrence", layout = "multi",
+#'         node_fill = "#A94A47", reference_fill = "#8A939B",
+#'         ring_colors = c(Events = "#4E7CA8", "No event" = "#DFE3E7"))
+#' ```
+#' `outcome` is the subtitle; `layout` is `"multi"`, `"circle"` or `"star"`;
+#' `node_fill` colours the treatments and `reference_fill` the reference;
+#' `ring_colors` names one colour per ring group. `netmeta(d)` instead of
+#' `netmeta(p)` stops with "Non-numeric value for argument 'TE'".
+#'
 #' @section Step 1, fit the network meta-analysis:
 #' ```r
 #' library(netmeta); library(nmaplots)

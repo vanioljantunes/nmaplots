@@ -23,6 +23,17 @@ remotes::install_github("vanioljantunes/nmaplots")
 Requires R >= 4.1 and ggplot2 >= 3.5. `netmeta` or `gemtc` is needed to
 build the object you plot. `ragg` is optional (sharper PNG and TIFF output).
 
+## Tutorial
+
+From an Excel sheet to the plot in three steps: prepare packages, load the
+data (`selectFile()`, pick the sheet from `ma`), then `pairwise()` →
+`netmeta()` → `nmaplot()`. The same walk-through is in `?nmaplots-1-workflow`.
+
+![nmaplots tutorial](man/figures/tutorial.png)
+
+The page is built from `tutorial/tutorial.html` (`Rscript tutorial/plot.R`,
+then `node tutorial/render.mjs`).
+
 ## Quick start
 
 ```r
