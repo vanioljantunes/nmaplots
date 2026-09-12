@@ -260,6 +260,18 @@ nmaplot <- function(x,
   }
 
   if (is.null(labels) && !is.null(x[["labels"]])) labels <- x[["labels"]]
+  # gemtc networks: treatments can be named by their display names
+  # (description) as well as by their ids
+  if (!is.null(x[["labels"]])) {
+    to_id <- function(v) {
+      if (is.null(v)) return(v)
+      hit <- match(v, x$labels)
+      ifelse(is.na(hit), v, names(x$labels)[hit])
+    }
+    reference <- to_id(reference)
+    order <- to_id(order)
+    highlight <- to_id(highlight)
+  }
 
   edge_style <- match.arg(edge_style)
   title_align <- match.arg(title_align)

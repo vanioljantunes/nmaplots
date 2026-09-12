@@ -62,13 +62,8 @@ nmaplot(net, outcome = "Fibrosis improvement without worsening of MASH",
 ```r
 library(gemtc)
 
-# gemtc ids allow only letters, digits and underscore; keep the real names in
-# `description` and nmaplot() uses them as labels
-ids <- gsub("[^A-Za-z0-9_]", "_", d$treatment)
-network <- mtc.network(
-  data.ab = data.frame(study = d$study, treatment = ids,
-                       responders = d$responders, sampleSize = d$sampleSize),
-  treatments = unique(data.frame(id = ids, description = d$treatment)))
+# nma_gemtc() takes the treatment names as they are ("Cilofexor + Firsocostat")
+network <- nma_gemtc(d[, c("study", "treatment", "responders", "sampleSize")])
 
 nmaplot(network, reference = "Placebo",
         outcome = "Fibrosis improvement without worsening of MASH")

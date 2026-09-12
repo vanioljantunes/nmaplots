@@ -222,13 +222,8 @@ test_that("continuous networks get no ring and no event count", {
 mash_gemtc <- function() {
   data(mash, package = "nmaplots", envir = environment())
   d <- mash$fib_improvement_alldoses
-  ids <- gsub("[^A-Za-z0-9_]", "_", d$treatment)
-  trt <- unique(data.frame(id = ids, description = d$treatment,
-                           stringsAsFactors = FALSE))
-  list(d = d, network = gemtc::mtc.network(
-    data.ab = data.frame(study = d$study, treatment = ids,
-                         responders = d$responders, sampleSize = d$sampleSize),
-    treatments = trt))
+  list(d = d, network = nma_gemtc(
+    d[, c("study", "treatment", "responders", "sampleSize")]))
 }
 
 test_that("gemtc networks, models and results match the netmeta plot", {
@@ -248,7 +243,7 @@ test_that("gemtc networks, models and results match the netmeta plot", {
     nodes <- p$nmaplot$nodes
     # display names come from the description column
     expect_setequal(sub("\n.*", "", nodes$label), sub("\n.*", "", ref$nodes$label))
-    i <- match(gsub("[^A-Za-z0-9_]", "_", ref$nodes$trt), nodes$trt)
+    i <- match(ref$nodes$name, nodes$name)
     expect_equal(nodes$n[i], ref$nodes$n)
     expect_equal(nodes$k[i], ref$nodes$k)
     expect_equal(nrow(p$nmaplot$edges), nrow(ref$edges))

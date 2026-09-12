@@ -1,5 +1,12 @@
 # nmaplots 0.3.0.9000
 
+* New `nma_gemtc()`: builds a `gemtc::mtc.network()` from treatment names as
+  they are. gemtc rejects names with spaces or symbols
+  (`"Cilofexor + Firsocostat"`); `nma_gemtc()` makes valid ids internally and
+  keeps the names as `description`, which `nmaplot()` uses for the labels. No
+  more `gsub()` on the treatment column. For gemtc networks, `nmaplot()`'s
+  `reference`, `order` and `highlight` accept the names too.
+
 * Node labels: binary networks show `event/n = 21/50 (42%)` under the
   treatment name, the percentage being the event rate the ring draws; other
   networks show `n = 50` (or `k = 3`). Each node's share of all patients is

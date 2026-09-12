@@ -69,16 +69,14 @@ per treatment is shown as \code{k = ...}.
 Fitting with \pkg{gemtc} instead? Pass the \code{mtc.network}, the
 \code{mtc.model} or the \code{mtc.run()} result straight to \code{\link[=nmaplot]{nmaplot()}}:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{ids <- gsub("[^A-Za-z0-9_]", "_", d$treatment)
-network <- gemtc::mtc.network(
-  data.ab = data.frame(study = d$study, treatment = ids,
-                       responders = d$responders, sampleSize = d$sampleSize),
-  treatments = unique(data.frame(id = ids, description = d$treatment)))
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{network <- nma_gemtc(d[, c("study", "treatment", "responders", "sampleSize")])
 nmaplot(network, reference = "Placebo")
 }\if{html}{\out{</div>}}
 
-gemtc ids allow only letters, digits and underscore; the \code{description}
-column carries the readable names and becomes the node labels.
+\code{\link[=nma_gemtc]{nma_gemtc()}} builds the \code{gemtc::mtc.network()} from the treatment names
+as they are: gemtc only accepts ids of letters, digits and underscores, so
+it makes those ids internally and keeps the names for the node labels.
+\code{reference}, \code{order} and \code{highlight} take the names as well.
 }
 
 \section{Step 2, draw}{
