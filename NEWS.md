@@ -1,4 +1,4 @@
-# nmaplots 0.2.0.9000
+# nmaplots 0.3.0
 
 * Binary networks draw an event-rate ring by default: each node shows events
   over participants, with that one percentage printed outside the ring.
