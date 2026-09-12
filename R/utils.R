@@ -8,12 +8,16 @@ nma_classes <- c("netmeta", "mtc.network", "mtc.model", "mtc.result")
 # (display names, gemtc only). netmeta objects pass through unchanged.
 as_nma_input <- function(x) {
   if (inherits(x, "netmeta")) return(x)
+  if (is.data.frame(x) && all(c("treat1", "treat2", "studlab") %in% names(x))) {
+    return(pairwise_input(x))
+  }
   if (inherits(x, "mtc.result")) x <- x$model
   if (inherits(x, "mtc.model")) x <- x$network
   if (!inherits(x, "mtc.network")) {
-    stop("`x` must be a 'netmeta' object (netmeta::netmeta()) or a 'gemtc' ",
-         "network, model or result (gemtc::mtc.network(), mtc.model(), mtc.run()).",
-         call. = FALSE)
+    stop("`x` must be a 'netmeta' object (netmeta::netmeta()), pairwise data ",
+         "(meta::pairwise(), or a data frame with treat1, treat2 and studlab) ",
+         "or a 'gemtc' network, model or result (gemtc::mtc.network(), ",
+         "mtc.model(), mtc.run()).", call. = FALSE)
   }
   gemtc_input(x)
 }
@@ -50,14 +54,7 @@ gemtc_input <- function(network) {
   studlab <- rep(names(rows), vapply(rows, function(r) NROW(r), integer(1)))
   pw <- do.call(rbind, rows)
 
-  # totals only when every arm reports them, so events / n stay consistent
-  per_trt <- function(v) {
-    if (anyNA(v)) return(NULL)
-    tot <- tapply(v, factor(arms$treatment, trts), sum)
-    stats::setNames(as.numeric(ifelse(is.na(tot), 0, tot)), trts)
-  }
-  n.trts <- per_trt(arms$n)
-  events.trts <- if (is.null(n.trts)) NULL else per_trt(arms$events)
+  totals <- arm_totals(arms, trts)
 
   labels <- NULL
   if (!is.null(tr$description)) {
@@ -69,8 +66,22 @@ gemtc_input <- function(network) {
   }
 
   list(trts = trts, treat1 = pw$treat1, treat2 = pw$treat2, studlab = studlab,
-       n.trts = n.trts, events.trts = events.trts, k.trts = NULL,
+       n.trts = totals$n.trts, events.trts = totals$events.trts, k.trts = NULL,
        reference.group = NULL, labels = labels)
+}
+
+# Per-treatment sample size and event totals from one row per study arm
+# (columns treatment, n, events). Totals only when every arm reports them, so
+# events / n stay consistent.
+arm_totals <- function(arms, trts) {
+  per_trt <- function(v) {
+    if (anyNA(v)) return(NULL)
+    tot <- tapply(v, factor(arms$treatment, trts), sum)
+    stats::setNames(as.numeric(ifelse(is.na(tot), 0, tot)), trts)
+  }
+  n.trts <- per_trt(arms$n)
+  list(n.trts = n.trts,
+       events.trts = if (is.null(n.trts)) NULL else per_trt(arms$events))
 }
 
 # Extract nodes, edges, sample sizes and multi-arm designs from a netmeta object.

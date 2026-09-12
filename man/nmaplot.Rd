@@ -80,7 +80,10 @@ network is read from \code{data.ab} and \code{data.re}: sample sizes come from
 \code{sampleSize} and events from \code{responders} when every arm has them; the
 \code{description} column of the treatments table, when it differs from \code{id},
 gives the default \code{labels}; \code{reference} defaults to the most connected
-treatment.}
+treatment. Pairwise data also works: the output of \code{\link[meta:pairwise]{meta::pairwise()}}, or
+any data frame with \code{treat1}, \code{treat2} and \code{studlab} (sample sizes from
+\code{n1}/\code{n2}, events from \code{event1}/\code{event2}). Text columns holding numbers,
+as after reading a decimal-comma file, are converted by \code{\link[=nma_clean]{nma_clean()}}.}
 
 \item{layout}{Node arrangement. \code{"multi"} (default): treatments evenly
 spaced on a polygon, in the order of \code{order}. \code{"circle"}: treatments on

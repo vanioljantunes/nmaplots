@@ -63,6 +63,27 @@ nmaplot(network, reference = "Placebo",
 # an mtc.model or the mtc.run() result works the same way
 ```
 
+### Pairwise data with decimal commas
+
+A `pairwise()` result saved with `write.csv2()` (or edited in a spreadsheet
+set to a decimal-comma locale) reads back with `TE` and `seTE` as text, and
+`netmeta()` stops with "Non-numeric value for argument 'TE'". `nma_clean()`
+converts those columns, including Unicode minus signs; `nmaplot()` also takes
+the pairwise rows directly and cleans them itself.
+
+```r
+f <- system.file("extdata", "recurrence_pairwise.csv", package = "nmaplots")
+d <- read.csv(f, sep = ";", fileEncoding = "UTF-8")
+class(d$TE)                                # "character": "-0,684"
+
+nmaplot(d, outcome = "Patient recurrence")  # straight from the pairwise rows
+
+d <- nma_clean(d)                           # TE, seTE now numeric
+net <- netmeta(TE, seTE, treat1, treat2, studlab, data = d, sm = "RR",
+               n1 = n1, n2 = n2, event1 = event1, event2 = event2)
+nmaplot(net, outcome = "Patient recurrence")
+```
+
 `mash` is the built-in example: arm-level results of drug trials for MASH
 with fibrosis, four outcomes (`?mash`).
 

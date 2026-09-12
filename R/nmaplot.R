@@ -16,7 +16,10 @@
 #'   `sampleSize` and events from `responders` when every arm has them; the
 #'   `description` column of the treatments table, when it differs from `id`,
 #'   gives the default `labels`; `reference` defaults to the most connected
-#'   treatment.
+#'   treatment. Pairwise data also works: the output of [meta::pairwise()], or
+#'   any data frame with `treat1`, `treat2` and `studlab` (sample sizes from
+#'   `n1`/`n2`, events from `event1`/`event2`). Text columns holding numbers,
+#'   as after reading a decimal-comma file, are converted by [nma_clean()].
 #' @param layout Node arrangement. `"multi"` (default): treatments evenly
 #'   spaced on a polygon, in the order of `order`. `"circle"`: treatments on
 #'   a circle (drawn as a light guide line), ordered by number of direct

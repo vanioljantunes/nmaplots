@@ -1,5 +1,18 @@
 # nmaplots 0.3.0.9000
 
+* New `nma_clean()`: converts text columns that hold numbers, such as `TE` and
+  `seTE` read back from a `write.csv2()` file (`"-0,684"`), to numeric. It
+  reads decimal commas, drops thousands dots in `"1.234,5"`, and accepts the
+  Unicode minus and dash characters spreadsheets substitute for `-`. Without
+  it, `netmeta()` stops with "Non-numeric value for argument 'TE'".
+* `nmaplot()` accepts pairwise data directly (`meta::pairwise()` output or a
+  data frame with `treat1`, `treat2` and `studlab`), cleaned with
+  `nma_clean()`. Sample sizes and events come from `n1`/`n2` and
+  `event1`/`event2`.
+* New example file `inst/extdata/recurrence_pairwise.csv`: a pairwise
+  recurrence network (14 comparisons, 11 treatments) saved with `;`
+  separators and decimal commas.
+
 * `nmaplot()` accepts 'gemtc' objects: `mtc.network`, `mtc.model` and
   `mtc.result`. Arms in `data.ab` and `data.re` become the edges; sample sizes
   (`sampleSize`) and events (`responders`) are used when every arm has them,
