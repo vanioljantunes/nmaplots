@@ -1,15 +1,16 @@
 # nmaplots
 
-Publication-quality network plots for `netmeta` objects, in one function.
+Publication-quality network plots for `netmeta` and `gemtc` objects, in one
+function.
 
 `nmaplot()` takes the object returned by `netmeta::netmeta()`, exactly like
-`netmeta::netgraph()`, and draws the evidence network with ggplot2: node
-area by sample size, black edges with the number of studies in a circle,
-treatment name plus `n = 1,234 (18%)` at every node, an optional outer ring per
-node showing a subgroup composition (study design, risk of bias, region,
-anything), and a framed legend panel.
+`netmeta::netgraph()`, or a `gemtc` network, model or result, and draws the
+evidence network with ggplot2: node area by sample size, black edges with the
+number of studies in a circle, treatment name plus `n = 1,234 (18%)` at every
+node, an outer ring with each treatment's event rate on binary networks, and a
+framed legend panel.
 
-![ring network plot](man/figures/ring.png)
+![network plot with event-rate ring](man/figures/default.png)
 
 ## Installation
 
@@ -18,8 +19,8 @@ anything), and a framed legend panel.
 remotes::install_github("vanioljantunes/nmaplots")
 ```
 
-Requires R >= 4.1 and ggplot2 >= 3.5. `netmeta` is needed to build the
-object you plot. `ragg` is optional (sharper PNG and TIFF output).
+Requires R >= 4.1 and ggplot2 >= 3.5. `netmeta` or `gemtc` is needed to
+build the object you plot. `ragg` is optional (sharper PNG and TIFF output).
 
 ## Quick start
 
@@ -33,23 +34,42 @@ p <- pairwise(treat = treatment, event = responders, n = sampleSize,
               studlab = study, data = d, sm = "RR")
 net <- netmeta(p, reference.group = "Placebo")
 
-# Same input as netgraph(net). Title is centred; the outcome becomes the subtitle.
+# Same input as netgraph(net). Binary outcome, so each node gets an outer ring
+# with its event rate (events over participants). Title is centred; the
+# outcome becomes the subtitle.
 nmaplot(net, outcome = "Fibrosis improvement without worsening of MASH")
 
-# Outer ring from a column of the data: one label per study arm, counted per
-# treatment. Here study design (RCT / PSM), but any categorical column works.
-nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
-        outcome = "Fibrosis improvement without worsening of MASH")
-
 # Save as PNG, PDF or TIFF (format from the extension)
-nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
-        outcome = "Fibrosis improvement without worsening of MASH",
+nmaplot(net, outcome = "Fibrosis improvement without worsening of MASH",
         file = c("network.png", "network.pdf", "network.tiff"),
         width = 9, height = 9.5, dpi = 300)
 ```
 
+### gemtc
+
+```r
+library(gemtc)
+
+# gemtc ids allow only letters, digits and underscore; keep the real names in
+# `description` and nmaplot() uses them as labels
+ids <- gsub("[^A-Za-z0-9_]", "_", d$treatment)
+network <- mtc.network(
+  data.ab = data.frame(study = d$study, treatment = ids,
+                       responders = d$responders, sampleSize = d$sampleSize),
+  treatments = unique(data.frame(id = ids, description = d$treatment)))
+
+nmaplot(network, reference = "Placebo",
+        outcome = "Fibrosis improvement without worsening of MASH")
+# an mtc.model or the mtc.run() result works the same way
+```
+
 `mash` is the built-in example: arm-level results of drug trials for MASH
-with fibrosis, four outcomes (`?mash`). Its `design` column is illustrative.
+with fibrosis, four outcomes (`?mash`).
+
+The ring can show any subgroup composition instead of the event rate, such as
+study design or risk of bias: pass a treatment-by-group table, for example
+`ring = table(d$treatment, d$design)` with `ring_name = "Study design"`
+(`mash`'s `design` column is illustrative). See `?nmaplots-2-ring`.
 
 ## What you can change
 
@@ -85,13 +105,8 @@ The function returns a `ggplot` object. Add layers or a different theme with
 
 ## Gallery
 
-Default look (`mash`, fibrosis improvement):
-
-![default network plot](man/figures/default.png)
-
-With a study-design ring (RCT versus propensity-score matched):
-
-![ring network plot](man/figures/ring.png)
+The figure at the top is the default look (`mash`, fibrosis improvement):
+a binary network, so the event-rate ring is on without any extra argument.
 
 `layout = "circle"` places the treatments on a circle (light guide line)
 ordered by number of comparisons, most connected at the top;

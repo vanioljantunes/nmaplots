@@ -2,7 +2,7 @@
 % Please edit documentation in R/nmaplot.R
 \name{nmaplot}
 \alias{nmaplot}
-\title{Network plot for a netmeta object}
+\title{Network plot for a netmeta or gemtc object}
 \usage{
 nmaplot(
   x,
@@ -73,7 +73,14 @@ nmaplot(
 )
 }
 \arguments{
-\item{x}{An object of class \code{netmeta} (from \code{\link[netmeta:netmeta]{netmeta::netmeta()}}).}
+\item{x}{An object of class \code{netmeta} (from \code{\link[netmeta:netmeta]{netmeta::netmeta()}}), or a
+\pkg{gemtc} object: \code{mtc.network} (\code{gemtc::mtc.network()}), \code{mtc.model}
+(\code{gemtc::mtc.model()}) or \code{mtc.result} (\code{gemtc::mtc.run()}). For gemtc the
+network is read from \code{data.ab} and \code{data.re}: sample sizes come from
+\code{sampleSize} and events from \code{responders} when every arm has them; the
+\code{description} column of the treatments table, when it differs from \code{id},
+gives the default \code{labels}; \code{reference} defaults to the most connected
+treatment.}
 
 \item{layout}{Node arrangement. \code{"multi"} (default): treatments evenly
 spaced on a polygon, in the order of \code{order}. \code{"circle"}: treatments on
@@ -261,8 +268,9 @@ edge and ring data frames used for drawing. Returned invisibly when
 }
 \description{
 Draws the evidence network of a network meta-analysis fitted with
-\code{\link[netmeta:netmeta]{netmeta::netmeta()}}. The function takes the same object as
-\code{\link[netmeta:netgraph]{netmeta::netgraph()}} and renders it with 'ggplot2': node area by sample
+\code{\link[netmeta:netmeta]{netmeta::netmeta()}} or set up with \pkg{gemtc}. The function takes the
+same object as \code{\link[netmeta:netgraph]{netmeta::netgraph()}} (or a gemtc network, model or result)
+and renders it with 'ggplot2': node area by sample
 size, edge width by number of studies, study counts on the edges, treatment
 name and sample size at every node, an optional outer ring showing a
 subgroup composition per treatment (for example study design), several

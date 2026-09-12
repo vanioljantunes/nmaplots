@@ -1,5 +1,78 @@
 # Internal helpers for nmaplot(). Nothing here is exported.
 
+# Classes nmaplot() accepts.
+nma_classes <- c("netmeta", "mtc.network", "mtc.model", "mtc.result")
+
+# Normalise the input to the netmeta fields nma_network() reads: trts, treat1,
+# treat2, studlab, n.trts, events.trts, k.trts, reference.group, plus labels
+# (display names, gemtc only). netmeta objects pass through unchanged.
+as_nma_input <- function(x) {
+  if (inherits(x, "netmeta")) return(x)
+  if (inherits(x, "mtc.result")) x <- x$model
+  if (inherits(x, "mtc.model")) x <- x$network
+  if (!inherits(x, "mtc.network")) {
+    stop("`x` must be a 'netmeta' object (netmeta::netmeta()) or a 'gemtc' ",
+         "network, model or result (gemtc::mtc.network(), mtc.model(), mtc.run()).",
+         call. = FALSE)
+  }
+  gemtc_input(x)
+}
+
+# gemtc stores one row per study arm in data.ab (arm-level) and/or data.re
+# (relative effects). Arms become the pairwise rows netmeta would hold:
+# choose(k, 2) rows per study.
+gemtc_input <- function(network) {
+  arm_cols <- function(d) {
+    if (is.null(d) || !nrow(d)) return(NULL)
+    get <- function(col) if (col %in% names(d)) as.numeric(d[[col]]) else
+      rep(NA_real_, nrow(d))
+    data.frame(study = as.character(d$study),
+               treatment = as.character(d$treatment),
+               n = get("sampleSize"), events = get("responders"),
+               stringsAsFactors = FALSE)
+  }
+  arms <- rbind(arm_cols(network[["data.ab"]]), arm_cols(network[["data.re"]]))
+  if (is.null(arms) || !nrow(arms)) {
+    stop("The gemtc network has no data (`data.ab` or `data.re`).", call. = FALSE)
+  }
+
+  tr <- network$treatments
+  trts <- if (!is.null(tr$id)) as.character(tr$id) else
+    sort(unique(arms$treatment))
+
+  rows <- lapply(split(arms$treatment, factor(arms$study, unique(arms$study))),
+                 function(t) {
+    t <- unique(t)
+    if (length(t) < 2) return(NULL)
+    cm <- utils::combn(t, 2)
+    data.frame(treat1 = cm[1, ], treat2 = cm[2, ], stringsAsFactors = FALSE)
+  })
+  studlab <- rep(names(rows), vapply(rows, function(r) NROW(r), integer(1)))
+  pw <- do.call(rbind, rows)
+
+  # totals only when every arm reports them, so events / n stay consistent
+  per_trt <- function(v) {
+    if (anyNA(v)) return(NULL)
+    tot <- tapply(v, factor(arms$treatment, trts), sum)
+    stats::setNames(as.numeric(ifelse(is.na(tot), 0, tot)), trts)
+  }
+  n.trts <- per_trt(arms$n)
+  events.trts <- if (is.null(n.trts)) NULL else per_trt(arms$events)
+
+  labels <- NULL
+  if (!is.null(tr$description)) {
+    desc <- as.character(tr$description)
+    if (!all(is.na(desc)) && !identical(desc, trts)) {
+      desc[is.na(desc) | !nzchar(desc)] <- trts[is.na(desc) | !nzchar(desc)]
+      labels <- stats::setNames(desc, trts)
+    }
+  }
+
+  list(trts = trts, treat1 = pw$treat1, treat2 = pw$treat2, studlab = studlab,
+       n.trts = n.trts, events.trts = events.trts, k.trts = NULL,
+       reference.group = NULL, labels = labels)
+}
+
 # Extract nodes, edges, sample sizes and multi-arm designs from a netmeta object.
 nma_network <- function(x) {
   trts <- x$trts

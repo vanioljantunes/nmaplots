@@ -130,7 +130,7 @@ test_that("files are written in png, pdf and tiff", {
 })
 
 test_that("non-netmeta input is rejected", {
-  expect_error(nmaplot(list()), "class 'netmeta'")
+  expect_error(nmaplot(list()), "'netmeta' object .* 'gemtc'")
 })
 
 test_that("custom labels keep the sample size suffix", {
@@ -210,4 +210,62 @@ test_that("continuous networks get no ring and no event count", {
   expect_null(g$nmaplot$rings)
   sub <- g$labels$subtitle
   expect_false(!is.null(sub) && grepl("events", sub))
+})
+
+# ---- gemtc -------------------------------------------------------------------
+
+mash_gemtc <- function() {
+  data(mash, package = "nmaplots", envir = environment())
+  d <- mash$fib_improvement_alldoses
+  ids <- gsub("[^A-Za-z0-9_]", "_", d$treatment)
+  trt <- unique(data.frame(id = ids, description = d$treatment,
+                           stringsAsFactors = FALSE))
+  list(d = d, network = gemtc::mtc.network(
+    data.ab = data.frame(study = d$study, treatment = ids,
+                         responders = d$responders, sampleSize = d$sampleSize),
+    treatments = trt))
+}
+
+test_that("gemtc networks, models and results match the netmeta plot", {
+  skip_if_not_installed("gemtc")
+  g <- mash_gemtc()
+  pw <- pairwise(treat = treatment, event = responders, n = sampleSize,
+                 studlab = study, data = g$d, sm = "RR")
+  net <- suppressWarnings(netmeta(pw, reference.group = "Placebo"))
+  ref <- nmaplot(net)$nmaplot
+
+  model <- suppressWarnings(gemtc::mtc.model(g$network, likelihood = "binom",
+                                             link = "log", linearModel = "fixed"))
+  result <- structure(list(model = model), class = "mtc.result")
+  for (obj in list(g$network, model, result)) {
+    p <- nmaplot(obj)
+    expect_s3_class(p, "ggplot")
+    nodes <- p$nmaplot$nodes
+    # display names come from the description column
+    expect_setequal(sub("\n.*", "", nodes$label), sub("\n.*", "", ref$nodes$label))
+    i <- match(gsub("[^A-Za-z0-9_]", "_", ref$nodes$trt), nodes$trt)
+    expect_equal(nodes$n[i], ref$nodes$n)
+    expect_equal(nodes$k[i], ref$nodes$k)
+    expect_equal(nrow(p$nmaplot$edges), nrow(ref$edges))
+    expect_equal(sum(p$nmaplot$edges$studies), sum(ref$edges$studies))
+    expect_setequal(unique(p$nmaplot$rings$group), c("Events", "No event"))
+    expect_equal(length(p$nmaplot$multiarm), length(ref$multiarm))
+  }
+})
+
+test_that("gemtc relative-effect networks plot without sample sizes", {
+  skip_if_not_installed("gemtc")
+  re <- data.frame(study = c(1, 1, 2, 2, 3, 3, 3),
+                   treatment = c("A", "B", "A", "C", "A", "B", "C"),
+                   diff = c(NA, -0.3, NA, 0.2, NA, -0.1, 0.4),
+                   std.err = c(NA, 0.2, NA, 0.3, 0.1, 0.25, 0.3))
+  nw <- gemtc::mtc.network(data.re = re)
+  p <- nmaplot(nw)
+  expect_equal(nrow(p$nmaplot$nodes), 3)
+  expect_true(all(grepl("k = ", p$nmaplot$nodes$label)))
+  expect_null(p$nmaplot$rings)
+  expect_equal(p$nmaplot$edges$studies[p$nmaplot$edges$treat1 == "A" &
+                                       p$nmaplot$edges$treat2 == "B"], 2)
+  # study 3 is three-armed
+  expect_named(nma_network(as_nma_input(nw))$multiarm, "3")
 })

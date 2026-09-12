@@ -1,3 +1,14 @@
+# nmaplots 0.3.0.9000
+
+* `nmaplot()` accepts 'gemtc' objects: `mtc.network`, `mtc.model` and
+  `mtc.result`. Arms in `data.ab` and `data.re` become the edges; sample sizes
+  (`sampleSize`) and events (`responders`) are used when every arm has them,
+  so binary arm-level networks get the event-rate ring too. The treatments'
+  `description` column supplies the display names when it differs from `id`,
+  which lets names like `Cilofexor + Firsocostat` show despite gemtc's
+  letters-digits-underscore rule for ids. `reference` defaults to the most
+  connected treatment.
+
 # nmaplots 0.3.0
 
 * Binary networks draw an event-rate ring by default: each node shows events

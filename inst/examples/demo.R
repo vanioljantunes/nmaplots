@@ -18,24 +18,25 @@ p <- pairwise(treat = treatment, event = responders, n = sampleSize,
 net <- netmeta(p, reference.group = "Placebo")
 outcome <- "Fibrosis improvement without worsening of MASH"
 
-# 1. Default: node area = n, black edges with the circled number of studies,
-#    boxed legend
+# 1. README figure: binary network, so the event-rate ring is drawn by
+#    default (events over participants per treatment)
 nmaplot(net, outcome = outcome,
         file = c(file.path(fig, "default.png"), file.path(out, "default.pdf"),
                  file.path(out, "default.tiff")),
-        width = 10, height = 10)
-
-# 2. Outer ring from the design column (RCT vs PSM, illustrative)
-nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
-        outcome = outcome,
-        file = c(file.path(fig, "ring.png"), file.path(out, "ring.pdf")),
         width = 10, height = 10.5)
 
-# 3. Same ring plot in the other two layouts (kept in inst/examples/out)
+# 2. Same network in the other two layouts (kept in inst/examples/out)
 for (lay in c("circle", "star")) {
-  nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
-          outcome = outcome, layout = lay,
-          file = file.path(out, paste0("ring_", lay, ".png")), width = 10, height = 10.5)
+  nmaplot(net, outcome = outcome, layout = lay,
+          file = file.path(out, paste0("default_", lay, ".png")),
+          width = 10, height = 10.5)
 }
+
+# 3. Subgroup ring from the design column (RCT vs PSM, illustrative);
+#    not shown in the README
+nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
+        outcome = outcome,
+        file = c(file.path(out, "ring.png"), file.path(out, "ring.pdf")),
+        width = 10, height = 10.5)
 
 cat("Figures written to", fig, "and", out, "\n")

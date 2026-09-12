@@ -1,14 +1,22 @@
-#' Network plot for a netmeta object
+#' Network plot for a netmeta or gemtc object
 #'
 #' Draws the evidence network of a network meta-analysis fitted with
-#' [netmeta::netmeta()]. The function takes the same object as
-#' [netmeta::netgraph()] and renders it with 'ggplot2': node area by sample
+#' [netmeta::netmeta()] or set up with \pkg{gemtc}. The function takes the
+#' same object as [netmeta::netgraph()] (or a gemtc network, model or result)
+#' and renders it with 'ggplot2': node area by sample
 #' size, edge width by number of studies, study counts on the edges, treatment
 #' name and sample size at every node, an optional outer ring showing a
 #' subgroup composition per treatment (for example study design), several
 #' layouts, a bottom legend panel, and direct export to PNG, PDF or TIFF.
 #'
-#' @param x An object of class `netmeta` (from [netmeta::netmeta()]).
+#' @param x An object of class `netmeta` (from [netmeta::netmeta()]), or a
+#'   \pkg{gemtc} object: `mtc.network` (`gemtc::mtc.network()`), `mtc.model`
+#'   (`gemtc::mtc.model()`) or `mtc.result` (`gemtc::mtc.run()`). For gemtc the
+#'   network is read from `data.ab` and `data.re`: sample sizes come from
+#'   `sampleSize` and events from `responders` when every arm has them; the
+#'   `description` column of the treatments table, when it differs from `id`,
+#'   gives the default `labels`; `reference` defaults to the most connected
+#'   treatment.
 #' @param layout Node arrangement. `"multi"` (default): treatments evenly
 #'   spaced on a polygon, in the order of `order`. `"circle"`: treatments on
 #'   a circle (drawn as a light guide line), ordered by number of direct
@@ -216,10 +224,7 @@ nmaplot <- function(x,
                     dpi = 300,
                     ...) {
 
-  if (!inherits(x, "netmeta")) {
-    stop("`x` must be an object of class 'netmeta' (see netmeta::netmeta()).",
-         call. = FALSE)
-  }
+  x <- as_nma_input(x)
 
   # ---- netgraph() compatibility arguments -----------------------------------
   dots <- list(...)
@@ -247,6 +252,8 @@ nmaplot <- function(x,
               paste(unknown, collapse = ", "))
     }
   }
+
+  if (is.null(labels) && !is.null(x[["labels"]])) labels <- x[["labels"]]
 
   edge_style <- match.arg(edge_style)
   title_align <- match.arg(title_align)

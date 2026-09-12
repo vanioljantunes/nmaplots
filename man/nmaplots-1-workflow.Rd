@@ -2,7 +2,7 @@
 % Please edit documentation in R/guides.R
 \name{nmaplots-1-workflow}
 \alias{nmaplots-1-workflow}
-\title{Guide 1: workflow, from a netmeta object to a saved figure}
+\title{Guide 1: workflow, from a netmeta or gemtc object to a saved figure}
 \description{
 \code{nmaplots} draws what \pkg{netmeta} already computed. Fit the network
 meta-analysis as usual, hand the object to \code{\link[=nmaplot]{nmaplot()}}, and save.
@@ -23,6 +23,20 @@ which is what \code{pairwise()} takes. Any \code{netmeta} object works. Sample s
 appear on the plot when the object carries them (\code{n1}/\code{n2}, which
 \code{pairwise()} supplies when you give \code{n}); otherwise the number of studies
 per treatment is shown as \code{k = ...}.
+
+Fitting with \pkg{gemtc} instead? Pass the \code{mtc.network}, the
+\code{mtc.model} or the \code{mtc.run()} result straight to \code{\link[=nmaplot]{nmaplot()}}:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{ids <- gsub("[^A-Za-z0-9_]", "_", d$treatment)
+network <- gemtc::mtc.network(
+  data.ab = data.frame(study = d$study, treatment = ids,
+                       responders = d$responders, sampleSize = d$sampleSize),
+  treatments = unique(data.frame(id = ids, description = d$treatment)))
+nmaplot(network, reference = "Placebo")
+}\if{html}{\out{</div>}}
+
+gemtc ids allow only letters, digits and underscore; the \code{description}
+column carries the readable names and becomes the node labels.
 }
 
 \section{Step 2, draw}{

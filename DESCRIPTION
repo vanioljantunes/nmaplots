@@ -1,11 +1,12 @@
 Package: nmaplots
 Type: Package
-Title: Publication-Quality Network Plots for 'netmeta' Objects
-Version: 0.3.0
+Title: Publication-Quality Network Plots for 'netmeta' and 'gemtc' Objects
+Version: 0.3.0.9000
 Authors@R: person("Vanio", "Antunes", email = "vanio.antunes.md@gmail.com", role = c("aut", "cre"))
-Description: A single-function companion to the 'netmeta' package. nmaplot()
-    takes the object returned by netmeta::netmeta() and draws the evidence
-    network with 'ggplot2': node size by sample size or number of studies,
+Description: A single-function companion to the 'netmeta' and 'gemtc'
+    packages. nmaplot() takes the object returned by netmeta::netmeta(), or a
+    'gemtc' network, model or result, and draws the evidence network with
+    'ggplot2': node size by sample size or number of studies,
     edge width and labels by number of studies, several layouts (circle,
     star, spring, custom), multi-arm study shading, colour and title control,
     optional grid, and direct export to PNG, PDF or TIFF.
@@ -22,6 +23,7 @@ Imports:
     tools,
     utils
 Suggests:
+    gemtc,
     netmeta,
     meta,
     ragg,

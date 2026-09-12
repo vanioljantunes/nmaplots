@@ -1,6 +1,6 @@
 # Long-form help pages, in the style of easyTSA.
 
-#' Guide 1: workflow, from a netmeta object to a saved figure
+#' Guide 1: workflow, from a netmeta or gemtc object to a saved figure
 #'
 #' @description
 #' `nmaplots` draws what \pkg{netmeta} already computed. Fit the network
@@ -20,6 +20,19 @@
 #' appear on the plot when the object carries them (`n1`/`n2`, which
 #' `pairwise()` supplies when you give `n`); otherwise the number of studies
 #' per treatment is shown as `k = ...`.
+#'
+#' Fitting with \pkg{gemtc} instead? Pass the `mtc.network`, the
+#' `mtc.model` or the `mtc.run()` result straight to [nmaplot()]:
+#' ```r
+#' ids <- gsub("[^A-Za-z0-9_]", "_", d$treatment)
+#' network <- gemtc::mtc.network(
+#'   data.ab = data.frame(study = d$study, treatment = ids,
+#'                        responders = d$responders, sampleSize = d$sampleSize),
+#'   treatments = unique(data.frame(id = ids, description = d$treatment)))
+#' nmaplot(network, reference = "Placebo")
+#' ```
+#' gemtc ids allow only letters, digits and underscore; the `description`
+#' column carries the readable names and becomes the node labels.
 #'
 #' @section Step 2, draw:
 #' ```r
