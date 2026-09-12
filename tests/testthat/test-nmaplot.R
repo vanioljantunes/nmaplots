@@ -274,3 +274,14 @@ test_that("gemtc relative-effect networks plot without sample sizes", {
   # study 3 is three-armed
   expect_named(nma_network(as_nma_input(nw))$multiarm, "3")
 })
+
+test_that("share text is yellow on dark fills and the legend uses node colours", {
+  expect_equal(share_text_color(c("#A94A47", "#8A939B", "#F3F4F6")),
+               c("#FFD43B", "#FFD43B", "#1F2A44"))
+  expect_equal(dominant_fill(c("#8A939B", "#A94A47", "#A94A47")), "#A94A47")
+  p <- nmaplot(make_net())
+  # the legend's example discs are drawn in the dominant node fill
+  fills <- unlist(lapply(seq_along(p$layers), function(i) ggplot2::layer_data(p, i)$fill))
+  expect_true(sum(fills == dominant_fill(p$nmaplot$nodes$fill), na.rm = TRUE) >
+                sum(p$nmaplot$nodes$fill == dominant_fill(p$nmaplot$nodes$fill)))
+})

@@ -424,6 +424,21 @@ contrast_text <- function(fill) {
   ifelse(lum > 0.6, "#1F2A44", "white")
 }
 
+# Colour of the share printed inside a node: yellow on dark fills (stronger
+# than white against red or grey), dark navy on light fills.
+share_text_color <- function(fill) {
+  rgb <- grDevices::col2rgb(fill)
+  lum <- (0.299 * rgb[1, ] + 0.587 * rgb[2, ] + 0.114 * rgb[3, ]) / 255
+  ifelse(lum > 0.6, "#1F2A44", "#FFD43B")
+}
+
+# Fill shared by most nodes (ties: first in treatment order). The legend's
+# example discs use it so they look like the plot.
+dominant_fill <- function(fill) {
+  tab <- table(factor(fill, levels = unique(fill)))
+  names(tab)[which.max(tab)]
+}
+
 # Edge-label circles that would overlap (typically two diagonals crossing at
 # the centre) are pushed apart along their own edges.
 spread_edge_labels <- function(edges, rc) {

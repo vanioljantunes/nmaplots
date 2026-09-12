@@ -140,14 +140,14 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
   cx1 <- cxs[1] - grp / 2 + rex1
   c1 <- circle_poly(cx1, cy, rex1)
   c1$id <- "L1"
-  c1$fill <- "#C9CDD2"
+  c1$fill <- dominant_fill(nodes$fill)
   circles[[1]] <- c1
   text[[2]] <- item(cx1 + rex1 + 0.03 * lim, cy, paste0(lab_big, "\n", note))
   # the example disc carries its share inside, as the plot's nodes do
   inside <- if (by_patients && !is.na(big)) {
     data.frame(x = cx1, y = cy,
                label = paste0(round(100 * big / sum(nodes$size_driver, na.rm = TRUE)), "%"),
-               colour = contrast_text(c1$fill[1]), stringsAsFactors = FALSE)
+               colour = share_text_color(c1$fill[1]), stringsAsFactors = FALSE)
   } else NULL
 
   # section 2: one line with the circled study count
@@ -203,7 +203,7 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
     bx0 <- cxs[isec] - blk / 2
     ex_c <- circle_poly(bx0 + rex * 1.5, cy, rex)
     ex_c$id <- "EX0"
-    ex_c$fill <- if (is.null(reference_fill)) "#8A939B" else reference_fill
+    ex_c$fill <- dominant_fill(nodes$fill)
     circles[[4]] <- ex_c
     ang <- pi / 2 - 2 * pi * seq(0, 1, length.out = k + 1)
     ringex <- do.call(rbind, lapply(seq_len(k), function(i) {

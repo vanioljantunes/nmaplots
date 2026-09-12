@@ -170,7 +170,8 @@ NULL
 #' underneath on binary networks, `x%` being the event rate (`n = ...` when
 #' there are no events, `k = ...` without sample sizes; `show_n = FALSE`
 #' drops the line). The share of all participants is printed in bold inside
-#' each disc, in black or white, whichever contrasts with the fill. Names longer than `label_wrap` characters
+#' each disc, yellow on dark fills and dark navy on light ones. The legend's
+#' example discs take the fill most nodes have, so they look like the plot. Names longer than `label_wrap` characters
 #' are wrapped. `labels` supplies display names (a named vector is safest).
 #' Labels sit outside the node, every row centred; `label_offset` moves them
 #' further out. `label_box = TRUE` draws a white container behind each label,

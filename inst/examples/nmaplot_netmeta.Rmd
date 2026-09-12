@@ -43,7 +43,7 @@ nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
         outcome = "Fibrosis improvement without worsening of MASH", layout = "star")
 ```
 
-```{r defante, fig.width = 10, fig.height = 10.5, dpi = 150, out.width = "100%"}
+```{r defante, fig.width = 10, fig.height = 10.5, dpi = 300, out.width = "100%"}
 # nmaplot() is laid out for a ~10 x 10.5 in page: text sizes are fixed in
 # points, so a smaller figure squeezes the network under the labels. The chunk
 # options above set that size for the notebook preview; maximising the output

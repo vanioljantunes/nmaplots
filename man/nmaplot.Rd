@@ -109,8 +109,8 @@ treatments, in the order of \code{x$trts} (or a named vector).}
 \item{show_n}{Logical. Print the counts under each treatment name, events
 over participants with the event rate on binary networks
 (\verb{event/n = 21/50 (42\%)}, \code{n = 50} without events), and each treatment's
-share of all randomised participants in bold inside its disc, in black or
-white for contrast. When the \code{netmeta} object has no sample sizes the number
+share of all randomised participants in bold inside its disc, yellow on
+dark fills and dark navy on light ones. When the \code{netmeta} object has no sample sizes the number
 of studies is printed instead (\code{k = 4}).}
 
 \item{ring}{Subgroup composition drawn as a ring around each node. The

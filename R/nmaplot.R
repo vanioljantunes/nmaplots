@@ -40,8 +40,8 @@
 #' @param show_n Logical. Print the counts under each treatment name, events
 #'   over participants with the event rate on binary networks
 #'   (`event/n = 21/50 (42%)`, `n = 50` without events), and each treatment's
-#'   share of all randomised participants in bold inside its disc, in black or
-#'   white for contrast. When the `netmeta` object has no sample sizes the number
+#'   share of all randomised participants in bold inside its disc, yellow on
+#'   dark fills and dark navy on light ones. When the `netmeta` object has no sample sizes the number
 #'   of studies is printed instead (`k = 4`).
 #' @param ring Subgroup composition drawn as a ring around each node. The
 #'   default (`NULL`) draws the event rate of every treatment when the network
@@ -647,7 +647,7 @@ nmaplot <- function(x,
     if (nrow(sh)) {
       sh$txt <- paste0(sh$share, "%")
       sh$pt <- sh$share_pt
-      sh$col <- contrast_text(sh$fill)
+      sh$col <- share_text_color(sh$fill)
       sh$psize <- sh$pt / ggplot2::.pt
       p <- p + geom_text(
         data = sh,
