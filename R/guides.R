@@ -74,8 +74,9 @@
 #' proportional to the sample size, reference treatment in grey and the
 #' others in muted red, black edges whose width follows the number of direct
 #' studies with that number in a white circle on the edge, bold treatment name
-#' with `event/n = events/participants (event rate %)` underneath (`n = ...`
-#' without events, `k = ...` without sample sizes), each node's share of all
+#' with the event rate underneath written as fractions, events/n = 96/705 =
+#' 14% (`n = ...` without events, `k = ...` without sample sizes), each
+#' node's share of all
 #' participants printed in bold inside the disc, centred title
 #' "Network of Interventions" with
 #' the outcome as subtitle, and a boxed legend under the network.
@@ -113,7 +114,7 @@ NULL
 #' When the network is binary (the `netmeta` object carries event counts) the
 #' ring is drawn without being asked for: each node shows its event rate,
 #' events over participants. The ring carries no percentage of its own: the
-#' event rate is in the node label (`event/n = 21/50 (42%)`) and the share of
+#' event rate is in the node label (events/n = 21/50 = 42%, as fractions) and the share of
 #' all participants is printed in bold inside the disc.
 #' `ring = FALSE` turns it off, and any `ring` of your own replaces it.
 #'
@@ -198,8 +199,9 @@ NULL
 #' `multiarm = TRUE` shades the polygon of each multi-arm trial.
 #'
 #' @section Labels:
-#' Treatment names are bold with `event/n = events/participants (x%)`
-#' underneath on binary networks, `x%` being the event rate (`n = ...` when
+#' Treatment names are bold with the event rate underneath on binary
+#' networks, written in three parts: events over n, the counts as a fraction
+#' (96 over 705) and the rate (`= 14%`) (`n = ...` when
 #' there are no events, `k = ...` without sample sizes; `show_n = FALSE`
 #' drops the line). The share of all participants is printed in bold inside
 #' each disc, yellow on dark fills and dark navy on light ones. The legend's

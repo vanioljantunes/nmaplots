@@ -338,10 +338,11 @@ label_direction <- function(nodes, edges, fallback) {
 # Rectangular plotting window fitted to the nodes (with rings) and the
 # estimated extent of their labels. `upi` = layout units per inch.
 plot_window <- function(nodes, label_size, upi, margin) {
-  chars <- vapply(strsplit(nodes$label, "\n", fixed = TRUE),
-                  function(v) max(nchar(v)), numeric(1))
+  chars <- if (!is.null(nodes$label_chars)) nodes$label_chars else
+    vapply(strsplit(nodes$label, "\n", fixed = TRUE), function(v) max(nchar(v)), numeric(1))
   tw <- chars * label_size * 0.55 / 72 * upi
-  nlines <- vapply(strsplit(nodes$label, "\n", fixed = TRUE), length, numeric(1))
+  nlines <- if (!is.null(nodes$label_lines)) nodes$label_lines else
+    vapply(strsplit(nodes$label, "\n", fixed = TRUE), length, numeric(1))
   th <- (nlines + 0.3) * 1.15 * label_size / 72 * upi
   left <- pmin(nodes$x - nodes$r_out, nodes$lx - tw * nodes$hjust)
   right <- pmax(nodes$x + nodes$r_out, nodes$lx + tw * (1 - nodes$hjust))
@@ -459,6 +460,47 @@ spread_edge_labels <- function(edges, rc) {
         edges$my[i] <- edges$my[i] + ey[i] / el[i] * shift
         edges$mx[j] <- edges$mx[j] - ex[j] / el[j] * shift
         edges$my[j] <- edges$my[j] - ey[j] / el[j] * shift
+        moved <- TRUE
+      }
+    }
+    if (!moved) break
+  }
+  edges
+}
+
+# Edge-label circles that sit on a node or its outer ring slide along their
+# own edge, away from that node, and stay between the two end nodes' rings.
+clear_edge_labels <- function(edges, rc, nodes) {
+  n <- nrow(edges)
+  if (!n) return(edges)
+  ex <- edges$xend - edges$x
+  ey <- edges$yend - edges$y
+  el <- sqrt(ex^2 + ey^2)
+  el[el == 0] <- 1
+  ux <- ex / el
+  uy <- ey / el
+  r1 <- nodes$r_out[match(edges$treat1, nodes$trt)]
+  r2 <- nodes$r_out[match(edges$treat2, nodes$trt)]
+  for (it in 1:6) {
+    moved <- FALSE
+    for (i in seq_len(n)) {
+      d <- sqrt((edges$mx[i] - nodes$x)^2 + (edges$my[i] - nodes$y)^2)
+      need <- nodes$r_out + rc[i] * 1.4
+      hit <- which(d < need)
+      if (!length(hit)) next
+      j <- hit[which.max(need[hit] - d[hit])]
+      away <- (edges$mx[i] - nodes$x[j]) * ux[i] + (edges$my[i] - nodes$y[j]) * uy[i]
+      dir <- if (away < 0) -1 else 1
+      t <- (edges$mx[i] - edges$x[i]) * ux[i] + (edges$my[i] - edges$y[i]) * uy[i] +
+        dir * (need[j] - d[j] + 0.01)
+      lo <- r1[i] + rc[i] * 1.4
+      hi <- el[i] - r2[i] - rc[i] * 1.4
+      t <- if (lo <= hi) min(max(t, lo), hi) else el[i] / 2
+      nx <- edges$x[i] + ux[i] * t
+      ny <- edges$y[i] + uy[i] * t
+      if (abs(nx - edges$mx[i]) + abs(ny - edges$my[i]) > 1e-9) {
+        edges$mx[i] <- nx
+        edges$my[i] <- ny
         moved <- TRUE
       }
     }

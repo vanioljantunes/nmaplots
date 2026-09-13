@@ -32,12 +32,16 @@ test_that("nmaplot returns a ggplot with node and edge data", {
 test_that("labels carry events over sample size, share goes inside the node", {
   net <- make_net()
   p <- nmaplot(net)
-  expect_true(all(grepl("event/n = ", p$nmaplot$nodes$label)))
+  expect_true(all(grepl("events/n = ", p$nmaplot$nodes$label)))
   expect_equal(p$nmaplot$nodes$fill[p$nmaplot$nodes$trt == "A"], "#8A939B")
   p2 <- nmaplot(net, show_n = FALSE)
   expect_equal(p2$nmaplot$nodes$label, net$trts)
-  expect_true(all(grepl("\nevent/n = [0-9,]+/[0-9,]+ [(][0-9]+%[)]$",
+  expect_true(all(grepl("\nevents/n = [0-9,]+/[0-9,]+ = [0-9]+%$",
                         p$nmaplot$nodes$label)))
+  # drawn as formula fraction = number fraction = percentage (plotmath)
+  ex <- p$nmaplot$nodes$nexpr
+  expect_true(all(grepl('^paste\\(frac\\(events, n\\), " = ", frac\\("[0-9,]+", "[0-9,]+"\\), " = ", "[0-9]+%"\\)$', ex)))
+  expect_silent(lapply(ex, function(e) parse(text = e)))
   nd <- p$nmaplot$nodes
   expect_equal(nd$share, round(100 * nd$n / sum(nd$n)))
   i <- match(nd$trt, names(net$events.trts))
@@ -142,7 +146,7 @@ test_that("custom labels keep the sample size suffix", {
   net <- make_net()
   p <- nmaplot(net, labels = c(A = "No contact", B = "Self-help",
                                C = "Individual", D = "Group"), label_wrap = NULL)
-  expect_true(all(grepl("^(No contact|Self-help|Individual|Group)\nevent/n = ", p$nmaplot$nodes$label)))
+  expect_true(all(grepl("^(No contact|Self-help|Individual|Group)\nevents/n = ", p$nmaplot$nodes$label)))
   p2 <- nmaplot(net, labels = c("a", "b", "c", "d"), show_n = FALSE)
   expect_equal(p2$nmaplot$nodes$label, c("a", "b", "c", "d"))
   expect_error(nmaplot(net, labels = c("a", "b")), "one entry per treatment")
@@ -164,6 +168,20 @@ test_that("ring accepts long and wide input and normalises to 100 percent", {
   expect_error(nmaplot(net, ring = data.frame(a = 1)), "`ring` must be")
   expect_warning(nmaplot(net, ring = data.frame(treatment = "ZZ", group = "Low", value = 1)),
                  "not in the network")
+})
+
+test_that("circled study counts stay clear of the nodes and their rings", {
+  data(mash, package = "nmaplots", envir = environment())
+  d <- mash$fib_improvement_alldoses
+  pw <- pairwise(treat = treatment, event = responders, n = sampleSize,
+                 studlab = study, data = d, sm = "RR")
+  net <- suppressWarnings(netmeta(pw, reference.group = "Placebo"))
+  g <- nmaplot(net)$nmaplot
+  nd <- g$nodes
+  ed <- g$edges
+  gap <- outer(seq_len(nrow(ed)), seq_len(nrow(nd)), function(i, j)
+    sqrt((ed$mx[i] - nd$x[j])^2 + (ed$my[i] - nd$y[j])^2) - nd$r_out[j])
+  expect_true(all(gap > 0))
 })
 
 test_that("legend panel extends the window downwards", {

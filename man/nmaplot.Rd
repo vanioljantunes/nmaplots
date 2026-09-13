@@ -28,7 +28,7 @@ nmaplot(
   label_offset = 0.06,
   label_box = FALSE,
   node_size = c("n", "studies", "equal"),
-  node_size_range = c(0.07, 0.2),
+  node_size_range = c(0.11, 0.2),
   node_fill = "#A94A47",
   reference_fill = "#8A939B",
   node_color = "white",
@@ -108,7 +108,8 @@ treatments, in the order of \code{x$trts} (or a named vector).}
 
 \item{show_n}{Logical. Print the counts under each treatment name, events
 over participants with the event rate on binary networks
-(\verb{event/n = 21/50 (42\%)}, \code{n = 50} without events), and each treatment's
+(drawn as fractions in three parts: events over n = 21 over 50 = 42\%;
+\code{n = 50} without events), and each treatment's
 share of all randomised participants in bold inside its disc, yellow on
 dark fills and dark navy on light ones. When the \code{netmeta} object has no sample sizes the number
 of studies is printed instead (\code{k = 4}).}

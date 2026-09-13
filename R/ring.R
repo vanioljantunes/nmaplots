@@ -195,9 +195,9 @@ build_legend <- function(nodes, edges, rings, ring_groups, size_label,
     ys <- cy + (k - 1) * step / 2 - (seq_len(k) - 1) * step
     sq <- 0.028 * lim
     rex <- 0.06 * wsec
-    # automatic ring: the Events colour is the event/n count of the labels
+    # automatic ring: the Events colour is the events/n count of the labels
     glab <- if (isTRUE(auto_ring))
-      ifelse(cols$group == "Events", "Events (event/n)", cols$group) else cols$group
+      ifelse(cols$group == "Events", "Events (events/n)", cols$group) else cols$group
     wtxt <- max(nchar(glab)) * 0.55 * 11 / 72 * (2 * lim) / 9
     blk <- 2 * rex * 1.5 + 0.06 * lim + 2 * sq + 0.03 * lim + wtxt
     bx0 <- cxs[isec] - blk / 2

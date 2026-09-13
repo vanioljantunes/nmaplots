@@ -6,8 +6,9 @@ function.
 `nmaplot()` takes the object returned by `netmeta::netmeta()`, exactly like
 `netmeta::netgraph()`, or a `gemtc` network, model or result, and draws the
 evidence network with ggplot2: node area by sample size, black edges with the
-number of studies in a circle, treatment name plus `event/n = 21/50 (42%)` at
-every node, each node's share of all patients in bold inside the disc, an
+number of studies in a circle, treatment name plus the event rate written as
+fractions (events/n = 21/50 = 42%) at every node, each node's share of all
+patients in bold inside the disc, an
 outer ring with each treatment's event rate on binary networks, and a framed
 legend panel.
 

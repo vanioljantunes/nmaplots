@@ -50,8 +50,9 @@ per study; \code{min_studies} hides comparisons with fewer studies.
 
 \section{Labels}{
 
-Treatment names are bold with \verb{event/n = events/participants (x\%)}
-underneath on binary networks, \verb{x\%} being the event rate (\code{n = ...} when
+Treatment names are bold with the event rate underneath on binary
+networks, written in three parts: events over n, the counts as a fraction
+(96 over 705) and the rate (\verb{= 14\%}) (\code{n = ...} when
 there are no events, \code{k = ...} without sample sizes; \code{show_n = FALSE}
 drops the line). The share of all participants is printed in bold inside
 each disc, yellow on dark fills and dark navy on light ones. The legend's

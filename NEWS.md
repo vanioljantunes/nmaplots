@@ -1,5 +1,14 @@
 # nmaplots 0.3.0.9000
 
+* The count line of binary networks is drawn as stacked fractions in three
+  parts: events over n, then the numbers (96 over 705), then the rate
+  (`= 14%`). The plain-text form stays in `p$nmaplot$nodes$nline`.
+* Node sizes are closer together (`node_size_range = c(0.11, 0.2)`): area
+  still grows with the sample size, but the smallest nodes are large enough
+  for the share printed inside them.
+* Circled study counts no longer sit on a node or its outer ring: a count
+  that would slides along its edge until it is clear.
+
 * New `nma_gemtc()`: builds a `gemtc::mtc.network()` from treatment names as
   they are. gemtc rejects names with spaces or symbols
   (`"Cilofexor + Firsocostat"`); `nma_gemtc()` makes valid ids internally and

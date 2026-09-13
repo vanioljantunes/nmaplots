@@ -39,7 +39,8 @@
 #'   treatments, in the order of `x$trts` (or a named vector).
 #' @param show_n Logical. Print the counts under each treatment name, events
 #'   over participants with the event rate on binary networks
-#'   (`event/n = 21/50 (42%)`, `n = 50` without events), and each treatment's
+#'   (drawn as fractions in three parts: events over n = 21 over 50 = 42%;
+#'   `n = 50` without events), and each treatment's
 #'   share of all randomised participants in bold inside its disc, yellow on
 #'   dark fills and dark navy on light ones. When the `netmeta` object has no sample sizes the number
 #'   of studies is printed instead (`k = 4`).
@@ -187,7 +188,7 @@ nmaplot <- function(x,
                     label_offset = 0.06,
                     label_box = FALSE,
                     node_size = c("n", "studies", "equal"),
-                    node_size_range = c(0.07, 0.2),
+                    node_size_range = c(0.11, 0.2),
                     node_fill = "#A94A47",
                     reference_fill = "#8A939B",
                     node_color = "white",
@@ -370,7 +371,7 @@ nmaplot <- function(x,
       rings <- rg$data
       rings$fill <- unname(ring_cols[rings$group])
       # the automatic ring prints no percentage: the event rate is in the
-      # node label (event/n) and the share of patients inside the disc
+      # node label (events/n fractions) and the share of patients inside the disc
       if (auto_ring) rings$show_pct <- FALSE
     }
   }
@@ -415,17 +416,39 @@ nmaplot <- function(x,
   nodes$share <- if (net$has.n) round(100 * nodes$n / sum(nodes$n, na.rm = TRUE)) else
     rep(NA_real_, n_trt)
   nodes$events <- unname(net$e.trts[trts])
-  nodes$nline <- if (isTRUE(show_n)) {
-    if (net$has.n && net$has.events) {
-      rate <- ifelse(nodes$n > 0, round(100 * nodes$events / nodes$n), 0)
-      paste0("event/n = ", format_int(nodes$events), "/", format_int(nodes$n),
-             " (", rate, "%)")
-    } else if (net$has.n) {
-      paste0("n = ", format_int(nodes$n))
-    } else paste0("k = ", nodes$k)
-  } else ""
+  # binary networks: "events/n = 96/705 = 14%" drawn as two stacked fractions
+  # (plotmath, nexpr); nline keeps the plain-text form
+  frac_row <- isTRUE(show_n) && net$has.n && net$has.events
+  nodes$nexpr <- NA_character_
+  if (frac_row) {
+    ev_txt <- format_int(nodes$events)
+    n_txt <- format_int(nodes$n)
+    rate <- paste0(ifelse(nodes$n > 0, round(100 * nodes$events / nodes$n), 0), "%")
+    nodes$nline <- paste0("events/n = ", ev_txt, "/", n_txt, " = ", rate)
+    nodes$nexpr <- sprintf(
+      'paste(frac(events, n), " = ", frac("%s", "%s"), " = ", "%s")',
+      ev_txt, n_txt, rate)
+  } else {
+    nodes$nline <- if (isTRUE(show_n)) {
+      if (net$has.n) paste0("n = ", format_int(nodes$n)) else paste0("k = ", nodes$k)
+    } else ""
+  }
   nodes$label <- ifelse(nzchar(nodes$nline), paste0(nodes$name, "\n", nodes$nline),
                         nodes$name)
+  # extent of the label block in characters and text lines; a fraction row is
+  # as wide as "events = 705 = 14%" and about 2.3 lines tall
+  name_chars <- vapply(strsplit(nodes$name, "\n", fixed = TRUE),
+                       function(v) max(nchar(v)), numeric(1))
+  name_lines <- vapply(strsplit(nodes$name, "\n", fixed = TRUE), length, numeric(1))
+  if (frac_row) {
+    row_chars <- 6 + pmax(nchar(ev_txt), nchar(n_txt)) + nchar(rate) + 6
+    row_lines <- rep(2.9, n_trt)
+  } else {
+    row_chars <- nchar(nodes$nline)
+    row_lines <- as.numeric(nzchar(nodes$nline))
+  }
+  nodes$label_chars <- pmax(name_chars, row_chars)
+  nodes$label_lines <- name_lines + row_lines
 
   centre <- c(mean(nodes$x), mean(nodes$y))
   dx <- nodes$x - centre[1]
@@ -696,7 +719,7 @@ nmaplot <- function(x,
     } else {
       # white disc with a black border, number inside, sized to the font
       rc <- edge_label_size * 0.95 / 72 * upi * (1 + 0.06 * (nchar(edges$studies) - 1))
-      edges <- spread_edge_labels(edges, rc)
+      edges <- clear_edge_labels(spread_edge_labels(edges, rc), rc, nodes)
       dots_df <- do.call(rbind, lapply(seq_len(nrow(edges)), function(i) {
         d <- circle_poly(edges$mx[i], edges$my[i], rc[i], n = 48)
         d$id <- i
@@ -714,14 +737,17 @@ nmaplot <- function(x,
     }
   }
 
-  # treatment names (bold) with the sample size line underneath (lighter)
+  # treatment names (bold) with the counts underneath (lighter); binary
+  # networks write the counts as stacked fractions, about 2.3 lines tall
   line_h <- label_size * 1.15 / 72 * upi * nodes$tscale
   two <- nzchar(nodes$nline)
+  is_frac <- two & !is.na(nodes$nexpr)
   nl <- vapply(strsplit(nodes$name, "\n", fixed = TRUE), length, integer(1))
-  nn <- ifelse(two, vapply(strsplit(nodes$nline, "\n", fixed = TRUE), length, integer(1)), 0L)
+  nn <- ifelse(is_frac, 2.9,
+               ifelse(two, vapply(strsplit(nodes$nline, "\n", fixed = TRUE),
+                                  length, integer(1)), 0))
   blk <- (nl + nn) * line_h                          # text block height
-  chars_all <- vapply(strsplit(nodes$label, "\n", fixed = TRUE),
-                      function(v) max(nchar(v)), numeric(1))
+  chars_all <- nodes$label_chars
   tw <- chars_all * label_size * 0.5 / 72 * upi * nodes$tscale   # block width
   yb <- nodes$ly - nodes$vjust * blk                 # block bottom
   # every row is centred on the block; the block itself sits on the far side
@@ -754,12 +780,21 @@ nmaplot <- function(x,
         vjust = .data$name_v, colour = .data$name_col, size = .data$tsize),
     hjust = 0.5, fontface = "bold", family = font_family, lineheight = 0.9
   )
-  if (any(two & shown)) {
+  if (any(two & shown & !is_frac)) {
     p <- p + geom_text(
-      data = nodes[two & shown, ],
+      data = nodes[two & shown & !is_frac, ],
       aes(x = .data$cx, y = .data$n_y, label = .data$nline,
           colour = .data$n_col, size = .data$tsize),
       hjust = 0.5, vjust = 0.5, family = font_family, lineheight = 0.9
+    )
+  }
+  if (any(is_frac & shown)) {
+    # events/n = 96/705 = 14% as stacked fractions (plotmath)
+    p <- p + geom_text(
+      data = nodes[is_frac & shown, ],
+      aes(x = .data$cx, y = .data$n_y, label = .data$nexpr,
+          colour = .data$n_col, size = .data$tsize),
+      hjust = 0.5, vjust = 0.5, family = font_family, parse = TRUE
     )
   }
   p <- p + ggplot2::scale_size_identity()
