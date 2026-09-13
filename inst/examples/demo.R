@@ -1,9 +1,11 @@
 # Demo: renders the README figures into man/figures (and PDF/TIFF into
 # inst/examples/out). Run from the package root: Rscript inst/examples/demo.R
 
+# load_all() uses the source in this repository, so the figures always match
+# the current code (library(nmaplots) would draw with the installed version)
 suppressPackageStartupMessages({
   library(netmeta)
-  library(nmaplots)
+  devtools::load_all(quiet = TRUE)
 })
 
 out <- "inst/examples/out"
