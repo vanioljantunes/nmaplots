@@ -1,7 +1,7 @@
 Package: nmaplots
 Type: Package
 Title: Publication-Quality Network Plots for 'netmeta' and 'gemtc' Objects
-Version: 0.3.0.9000
+Version: 0.4.0
 Authors@R: person("Vanio", "Antunes", email = "vanio.antunes.md@gmail.com", role = c("aut", "cre"))
 Description: A single-function companion to the 'netmeta' and 'gemtc'
     packages. nmaplot() takes the object returned by netmeta::netmeta(), or a
