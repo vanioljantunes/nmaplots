@@ -44,6 +44,7 @@ nmaforest(
   row_height = 0.26,
   label_width = NULL,
   column_width = NULL,
+  plot_width = 0.3,
   effect_width = 0.19,
   background = "white",
   file = NULL,
@@ -141,10 +142,12 @@ RevMan style sizes the marker by the direct sample size instead.}
 \item{row_height}{Height of one row, in inches, used when \code{height} is not
 given.}
 
-\item{label_width, column_width, effect_width}{Widths of the name column, of
-one count column and of the effect column, as fractions of the figure
-width. What is left over is the plotting band. \code{NULL} picks a width that
-suits the columns shown.}
+\item{label_width, column_width, plot_width, effect_width}{Widths of the name
+column, of one count column, of the plotting band and of the effect
+column, as fractions of the figure width. \code{label_width = NULL} gives the
+names whatever the other three leave over, so the band keeps its share
+however many columns are shown; \code{column_width = NULL} picks a width that
+suits the columns.}
 
 \item{background}{Background colour.}
 

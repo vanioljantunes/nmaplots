@@ -77,10 +77,12 @@
 #' @param rule_color Colour of the axis and the rules.
 #' @param row_height Height of one row, in inches, used when `height` is not
 #'   given.
-#' @param label_width,column_width,effect_width Widths of the name column, of
-#'   one count column and of the effect column, as fractions of the figure
-#'   width. What is left over is the plotting band. `NULL` picks a width that
-#'   suits the columns shown.
+#' @param label_width,column_width,plot_width,effect_width Widths of the name
+#'   column, of one count column, of the plotting band and of the effect
+#'   column, as fractions of the figure width. `label_width = NULL` gives the
+#'   names whatever the other three leave over, so the band keeps its share
+#'   however many columns are shown; `column_width = NULL` picks a width that
+#'   suits the columns.
 #' @param background Background colour.
 #' @param file Path(s) to write: `.png`, `.pdf`, `.tiff`. `NULL` only returns
 #'   the plot.
@@ -146,6 +148,7 @@ nmaforest <- function(x,
                       row_height = 0.26,
                       label_width = NULL,
                       column_width = NULL,
+                      plot_width = 0.30,
                       effect_width = 0.19,
                       background = "white",
                       file = NULL,
@@ -245,10 +248,14 @@ nmaforest <- function(x,
   if ("n" %in% columns) cols <- c(cols, "n1", "n2")
   if ("events" %in% columns) cols <- c(cols, "en1", "en2")
 
-  if (is.null(label_width)) label_width <- if (length(cols)) 0.30 else 0.40
   # events over totals need a wider column than a plain count
   if (is.null(column_width)) {
     column_width <- if ("events" %in% columns) 0.11 else 0.085
+  }
+  # the plotting band keeps its share; the names take what is left
+  if (is.null(label_width)) {
+    label_width <- 1 - length(cols) * column_width - plot_width - effect_width
+    if (label_width < 0.16) label_width <- 0.16
   }
   gap <- 0.012
   col_right <- if (length(cols))
