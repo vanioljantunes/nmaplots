@@ -41,4 +41,33 @@ nmaplot(net, ring = table(d$treatment, d$design), ring_name = "Study design",
         file = c(file.path(out, "ring.png"), file.path(out, "ring.pdf")),
         width = 10, height = 10.5)
 
+# 4. Forest of the relative effects, fitted with gemtc. Needs JAGS, so it is
+#    skipped when gemtc or rjags is missing.
+if (requireNamespace("gemtc", quietly = TRUE) &&
+    requireNamespace("rjags", quietly = TRUE)) {
+  network <- nma_gemtc(d[, c("study", "treatment", "responders", "sampleSize")])
+  model <- gemtc::mtc.model(network, likelihood = "binom", link = "log",
+                            linearModel = "random")
+  set.seed(1)
+  result <- gemtc::mtc.run(model, n.adapt = 1000, n.iter = 10000, thin = 2)
+
+  nmaforest(result, comparisons = "reference", reference = "Placebo",
+            outcome = outcome, title = "Relative effects",
+            favours = c("Favours placebo", "Favours treatment"),
+            file = file.path(fig, "forest.png"), width = 10)
+
+  nmaforest(result, comparisons = "reference", reference = "Placebo",
+            style = "revman", columns = c("studies", "events"),
+            outcome = outcome, title = "Relative effects",
+            favours = c("Favours placebo", "Favours treatment"),
+            file = file.path(out, "forest_revman.png"), width = 10)
+
+  # every pairwise comparison, one block per comparator
+  nmaforest(result, comparisons = "panels", reference = "Placebo",
+            outcome = outcome, title = "All pairwise comparisons",
+            file = file.path(out, "forest_panels.png"), width = 10)
+} else {
+  cat("gemtc or rjags missing: the forest figures were skipped\n")
+}
+
 cat("Figures written to", fig, "and", out, "\n")

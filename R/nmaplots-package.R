@@ -19,10 +19,14 @@
 #'   \item [nmaplots-4-netgraph] -- moving from `netgraph()`: argument map.
 #' }
 #'
-#' @section Main function:
+#' @section Main functions:
 #' \describe{
 #'   \item{[nmaplot()]}{Draw (and optionally save) the network plot. Returns a
 #'     `ggplot` object with the node, edge and ring tables in `$nmaplot`.}
+#'   \item{[nmaforest()]}{Draw the relative effects of a `gemtc` result as a
+#'     forest plot: every pairwise comparison or one reference block, a JAMA
+#'     or a RevMan layout, and columns for the direct evidence behind each
+#'     pair (studies, patients, events).}
 #' }
 #'
 #' @section Example data:

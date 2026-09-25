@@ -2,6 +2,7 @@
 
 export(nma_clean)
 export(nma_gemtc)
+export(nmaforest)
 export(nmaplot)
 importFrom(ggplot2,.data)
 importFrom(ggplot2,aes)

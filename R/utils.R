@@ -22,10 +22,9 @@ as_nma_input <- function(x) {
   gemtc_input(x)
 }
 
-# gemtc stores one row per study arm in data.ab (arm-level) and/or data.re
-# (relative effects). Arms become the pairwise rows netmeta would hold:
-# choose(k, 2) rows per study.
-gemtc_input <- function(network) {
+# One row per study arm of a gemtc network: study, treatment, n, events.
+# Both nmaplot() (through gemtc_input()) and nmaforest() read the arms here.
+gemtc_arms <- function(network) {
   arm_cols <- function(d) {
     if (is.null(d) || !nrow(d)) return(NULL)
     get <- function(col) if (col %in% names(d)) as.numeric(d[[col]]) else
@@ -35,7 +34,14 @@ gemtc_input <- function(network) {
                n = get("sampleSize"), events = get("responders"),
                stringsAsFactors = FALSE)
   }
-  arms <- rbind(arm_cols(network[["data.ab"]]), arm_cols(network[["data.re"]]))
+  rbind(arm_cols(network[["data.ab"]]), arm_cols(network[["data.re"]]))
+}
+
+# gemtc stores one row per study arm in data.ab (arm-level) and/or data.re
+# (relative effects). Arms become the pairwise rows netmeta would hold:
+# choose(k, 2) rows per study.
+gemtc_input <- function(network) {
+  arms <- gemtc_arms(network)
   if (is.null(arms) || !nrow(arms)) {
     stop("The gemtc network has no data (`data.ab` or `data.re`).", call. = FALSE)
   }

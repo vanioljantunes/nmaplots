@@ -77,6 +77,24 @@ nmaplot(network, reference = "Placebo")
 as they are: gemtc only accepts ids of letters, digits and underscores, so
 it makes those ids internally and keeps the names for the node labels.
 \code{reference}, \code{order} and \code{highlight} take the names as well.
+
+Once the gemtc model has run, \code{\link[=nmaforest]{nmaforest()}} draws the relative effects the
+same way: names with spaces instead of underscores, the direct evidence
+behind each pair in its own columns, and a JAMA or a RevMan layout.
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{model <- gemtc::mtc.model(network, likelihood = "binom", link = "log")
+result <- gemtc::mtc.run(model, n.adapt = 1000, n.iter = 10000)
+nmaforest(result, comparisons = "reference", reference = "Placebo",
+          columns = c("studies", "events"),
+          outcome = "Fibrosis improvement without worsening of MASH")
+}\if{html}{\out{</div>}}
+
+\code{comparisons} is \code{"reference"} (one block, everything against one
+treatment), \code{"panels"} (every pairwise comparison, one block per
+comparator) or \code{"pairs"} (one row per unordered pair); \code{style} is \code{"jama"}
+or \code{"revman"}; \code{columns} picks the count columns, which hold the direct
+evidence for that pair alone, with a dash where the estimate rests on
+indirect evidence only.
 }
 
 \section{Step 2, draw}{

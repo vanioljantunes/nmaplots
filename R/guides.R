@@ -66,6 +66,23 @@
 #' it makes those ids internally and keeps the names for the node labels.
 #' `reference`, `order` and `highlight` take the names as well.
 #'
+#' Once the gemtc model has run, [nmaforest()] draws the relative effects the
+#' same way: names with spaces instead of underscores, the direct evidence
+#' behind each pair in its own columns, and a JAMA or a RevMan layout.
+#' ```r
+#' model <- gemtc::mtc.model(network, likelihood = "binom", link = "log")
+#' result <- gemtc::mtc.run(model, n.adapt = 1000, n.iter = 10000)
+#' nmaforest(result, comparisons = "reference", reference = "Placebo",
+#'           columns = c("studies", "events"),
+#'           outcome = "Fibrosis improvement without worsening of MASH")
+#' ```
+#' `comparisons` is `"reference"` (one block, everything against one
+#' treatment), `"panels"` (every pairwise comparison, one block per
+#' comparator) or `"pairs"` (one row per unordered pair); `style` is `"jama"`
+#' or `"revman"`; `columns` picks the count columns, which hold the direct
+#' evidence for that pair alone, with a dash where the estimate rests on
+#' indirect evidence only.
+#'
 #' @section Step 2, draw:
 #' ```r
 #' nmaplot(net, outcome = "Fibrosis improvement without worsening of MASH")

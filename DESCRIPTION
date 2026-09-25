@@ -25,6 +25,7 @@ Imports:
 Suggests:
     gemtc,
     netmeta,
+    rjags,
     meta,
     ragg,
     testthat (>= 3.0.0)

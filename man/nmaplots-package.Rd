@@ -27,11 +27,15 @@ number comes from the fitted object.
 }
 }
 
-\section{Main function}{
+\section{Main functions}{
 
 \describe{
 \item{\code{\link[=nmaplot]{nmaplot()}}}{Draw (and optionally save) the network plot. Returns a
 \code{ggplot} object with the node, edge and ring tables in \verb{$nmaplot}.}
+\item{\code{\link[=nmaforest]{nmaforest()}}}{Draw the relative effects of a \code{gemtc} result as a
+forest plot: every pairwise comparison or one reference block, a JAMA
+or a RevMan layout, and columns for the direct evidence behind each
+pair (studies, patients, events).}
 }
 }
 

@@ -132,6 +132,37 @@ The function returns a `ggplot` object. Add layers or a different theme with
 `+` as usual. The node and edge data frames used for drawing are stored in
 `p$nmaplot`.
 
+## Forest plot of the relative effects
+
+`nmaforest()` draws what `gemtc::mtc.run()` estimated. Treatment names are
+printed as names (underscores become spaces, and the descriptions
+`nma_gemtc()` keeps are used when they are there), and the direct evidence
+behind each pair gets its own columns: how many studies randomised the two
+treatments against each other and how many patients, or events over totals,
+they carried. A pair the network only reaches indirectly shows a dash.
+
+```r
+network <- nma_gemtc(d[, c("study", "treatment", "responders", "sampleSize")])
+model <- gemtc::mtc.model(network, likelihood = "binom", link = "log")
+result <- gemtc::mtc.run(model, n.adapt = 1000, n.iter = 10000)
+
+nmaforest(result, comparisons = "reference", reference = "Placebo",
+          outcome = "Fibrosis improvement without worsening of MASH",
+          favours = c("Favours placebo", "Favours treatment"))
+```
+
+![forest plot of the relative effects](man/figures/forest.png)
+
+`comparisons` chooses what is on the figure: `"reference"` is one block,
+every treatment against one comparator (the layout `gemtc::forest()` draws);
+`"panels"` is every pairwise comparison, one block per comparator, each
+headed "Compared with ..."; `"pairs"` is one flat list, one row per unordered
+pair. `style = "jama"` (serif, open markers, hairline rules) or
+`style = "revman"` (sans, filled squares sized by the direct sample size,
+events over totals). `columns` picks the count columns
+(`"studies"`, `"n"`, `"events"`, `"none"`), and `sort`, `xlim`, `xticks`,
+`clip`, `digits` and `favours` control the rest.
+
 ## Gallery
 
 The figure at the top is the default look (`mash`, fibrosis improvement):
